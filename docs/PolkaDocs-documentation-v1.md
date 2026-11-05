@@ -1,8 +1,8 @@
-# PolkaDocs: Project Documentation (V1)
+# Knowly: Project Documentation (V1)
 
 > A document-based AI knowledge assistant. Users upload documents and chat with them. Answers are grounded in the uploaded content using RAG, with source citations.
 
-**Status:** V1 finalized for build
+**Status:** V1 finalized for build (architecture revised: traditional monolith + layered architecture)
 **Timeline:** 4 days
 **Author:** Berlin (Althaf)
 
@@ -32,27 +32,29 @@
 
 ## 1. Overview
 
-PolkaDocs lets a user upload documents (PDF, DOCX, TXT, Markdown), processes them into searchable vector chunks, and answers questions about them through a chat interface. Every answer cites the chunks it was built from.
+Knowly lets a user upload documents (PDF, DOCX, TXT, Markdown), processes them into searchable vector chunks, and answers questions about them through a chat interface. Every answer cites the chunks it was built from.
 
-PolkaDocs is a **RAG-based assistant**, not an autonomous agent. It retrieves context, builds a prompt, calls the LLM, and returns a grounded answer. It does not plan, use tools, or take actions on its own.
+Knowly is a **RAG-based assistant**, not an autonomous agent. It retrieves context, builds a prompt, calls the LLM, and returns a grounded answer. It does not plan, use tools, or take actions on its own.
 
 The project doubles as a learning vehicle for LLMs, RAG, LangChain, and the supporting ecosystem. The core LLM and RAG workflows are built first with the raw Gemini SDK, then LangChain is introduced on Day 3 and compared against the direct implementation.
 
+The backend is a **traditional monolith with a simple layered architecture**. The goal is to keep the code easy to read and fast to build, so the time goes into learning LLMs and RAG, not into architecture ceremony.
+
 ### 1.1 Module List to Folder Mapping
 
-The functional module list (see `PolkaDocs-v1-module-list.md`) maps to backend folders like this:
+The functional module list (see `Knowly-v1-module-list.md`) maps to backend folders like this:
 
 | Functional module | Backend folder |
 |---|---|
 | Auth | `modules/auth` |
 | User | `modules/users` |
 | Document | `modules/documents` |
-| Ingestion | `modules/documents` (ingest use case + chunker) |
-| Retrieval | `modules/documents` (retriever port + adapters), used by `modules/chat` |
+| Ingestion | `modules/documents` (ingestion service + chunker + extractors) |
+| Retrieval | `modules/documents` (retriever interface + implementations), used by `modules/chat` |
 | Chat | `modules/chat` |
 | LLM | `modules/llm` |
 | Observability | `modules/observability` |
-| Frontend (PWA) | `PolkaDocs-frontend` |
+| Frontend (PWA) | `knowly-frontend` |
 
 ## 2. Goals and Non-Goals
 
@@ -60,14 +62,15 @@ The functional module list (see `PolkaDocs-v1-module-list.md`) maps to backend f
 
 - Build a working document Q&A assistant in four days
 - Understand the LLM and RAG workflow end to end before abstracting it with LangChain
-- Keep business logic independent of any AI vendor or framework
+- Keep the code simple: clear responsibilities, no abstraction without a reason
 - Compare the raw implementation with the LangChain implementation side by side
 - Ship a PWA, containerized, with metrics and dashboards
 
 ### Non-Goals (V1)
 
-- Microservices
-- Modular monolith (strict module boundaries, per-module data ownership, enforced public APIs). Features are folders inside one monolith.
+- Clean Architecture, DDD, or strict dependency inversion (no use-case classes, no repository interfaces, no domain/ORM entity split, no mappers)
+- Modular monolith (strict module boundaries, per-module data ownership, enforced public APIs)
+- Microservices (not planned in V2 either)
 - Autonomous agents, multi-agent systems, LangGraph
 - Kubernetes
 - Message brokers or event streaming
@@ -91,7 +94,7 @@ The functional module list (see `PolkaDocs-v1-module-list.md`) maps to backend f
 |---|---|
 | Frontend | React, Vite, Redux Toolkit (PWA, service worker, offline cache) |
 | Backend | NestJS (TypeScript) |
-| Architecture | Monolith with Clean Architecture, feature-first folders |
+| Architecture | Traditional monolith, layered architecture, feature folders |
 | LLM provider | Google Gemini |
 | AI framework | Raw Gemini SDK first, LangChain on Day 3 |
 | Database | PostgreSQL |
@@ -107,139 +110,90 @@ The functional module list (see `PolkaDocs-v1-module-list.md`) maps to backend f
 
 ### 4.1 Style
 
-A single deployable NestJS application organized with **Clean Architecture**. Code is grouped by feature first, and each feature is split into the same four layers. Dependencies only point inward.
+A single deployable NestJS application with a **simple layered architecture**. Each feature is a NestJS module (a folder) that contains its own controller, service, and entities. A request flows top to bottom through three layers.
 
 ```
-Presentation   ->  Application  ->  Domain
-Infrastructure ->  Application  ->  Domain
+Controller  ->  Service  ->  Data access (TypeORM repositories / raw SQL / external SDKs)
 ```
-
-The domain layer knows nothing about NestJS, Postgres, Gemini, or LangChain.
 
 ```mermaid
 flowchart LR
   FE[React PWA] -->|REST + SSE| API
   subgraph API[NestJS monolith]
-    P[Presentation] --> A[Application use cases] --> D[Domain ports and entities]
-    I[Infrastructure adapters] -.implements.-> D
+    C[Controllers] --> S[Services]
+    S --> R[TypeORM repositories and raw SQL]
+    S --> AI[AI providers: Gemini or LangChain]
   end
-  I --> PG[(PostgreSQL + pgvector)]
-  I --> G[Gemini API]
-  I --> FS[(File storage)]
+  R --> PG[(PostgreSQL + pgvector)]
+  AI --> G[Gemini API]
+  S --> FS[(File storage)]
   API -->|/metrics| PR[Prometheus] --> GR[Grafana]
 ```
 
 ### 4.2 Layers
 
-| Layer | Responsibility | May depend on |
+| Layer | Responsibility | Calls |
 |---|---|---|
-| **Domain** | Entities, value objects, domain errors, ports (interfaces), injection tokens | Nothing |
-| **Application** | Use cases, orchestration of ports, application services (chunker, prompt builder) | Domain |
-| **Infrastructure** | Adapters: Gemini, LangChain, Postgres/pgvector repos, file storage, parsers, logger, metrics | Domain (and application types where needed) |
-| **Presentation** | Controllers, request/response DTOs, guards, pipes, filters, interceptors | Application, Domain |
+| **Controller** | HTTP only: routes, DTO validation, guards, SSE response. No business logic. | Services |
+| **Service** | Business logic and orchestration. One service per feature area (e.g. `DocumentsService`, `IngestionService`, `ChatService`). | Repositories, other services, AI providers |
+| **Data access** | TypeORM repositories (`@InjectRepository`), raw SQL for vector search, file system, vendor SDKs. | Database / external systems |
 
-### 4.3 The Dependency Rule
+### 4.3 Rules
 
-- Inner layers never import from outer layers.
-- Use cases depend on **ports** (interfaces), never on concrete adapters.
-- Adapters are bound to ports in NestJS modules using injection tokens.
-- Swapping Gemini for LangChain (or anything else) means changing one provider binding, not any use case.
-- `domain/` is pure TypeScript with no framework imports. `application/` may import only the `@nestjs/common` decorators `@Injectable()` and `@Inject()` so Nest can wire use cases. Nothing else from NestJS.
+- Controllers never touch the database or vendor SDKs. They call services.
+- Services hold the business logic. They use TypeORM repositories directly (no repository interfaces).
+- TypeORM entities are used across the whole app. No separate domain entities and no mappers.
+- Services may call services from other features through NestJS module imports. Avoid circular dependencies.
+- Use NestJS built-ins instead of custom wrappers: `Logger` for logging, `@nestjs/jwt` for tokens, `ConfigService` for config, `bcrypt` called directly for password hashing.
+- Do not create an interface, port, or abstraction unless there is a concrete reason (see 4.4).
 
-### 4.4 Ports, Adapters, Repositories, Services
+### 4.4 Where Abstractions Are Allowed
 
-| Term | Meaning | Lives in | File suffix |
-|---|---|---|---|
-| **Port** | Interface for something the core needs from outside | `domain/ports` | `.port.ts` |
-| **Repository (port)** | Port for persisting and loading domain entities | `domain/ports` | `.repository.ts` |
-| **Adapter** | Implements a (non-repository) port using a vendor or library | `infrastructure` | `.adapter.ts` |
-| **Repository impl** | Implements a repository port using the database | `infrastructure/persistence` | `.repository.impl.ts` |
-| **Use case** | One business action, one public `execute()` | `application/use-cases` | `.use-case.ts` |
-| **Application service** | Reusable pure logic used by use cases (no vendor code) | `application/services` | `.service.ts` |
+Abstractions are introduced only when something genuinely has more than one implementation. In Knowly that is the AI layer, because Day 3 compares raw Gemini against LangChain on the same documents and questions.
 
-Anything that talks to the outside world is a port plus an adapter, never an application service.
+| Abstraction | Reason | Implementations |
+|---|---|---|
+| `LlmProvider` | Gemini vs LangChain comparison | `GeminiLlmProvider` (Day 1-2), `LangChainLlmProvider` (Day 3) |
+| `EmbeddingProvider` | Gemini vs LangChain comparison | `GeminiEmbeddingProvider`, `LangChainEmbeddingProvider` |
+| `Retriever` | Hand-written pgvector vs LangChain retriever | `PgvectorRetriever` (Day 2), `LangChainRetriever` (Day 3) |
 
-### 4.5 Key Ports
-
-Each port file exports its injection token right next to the interface.
+Everything else is a concrete class: file storage (local disk), text extractors (a plain service picking an extractor by MIME type), metrics (`MetricsService` over `prom-client`), logging (Nest `Logger`).
 
 ```ts
-// modules/llm/domain/ports/llm.port.ts
-export const LLM_PORT = Symbol('LLM_PORT');
-export interface LLMPort {
+// modules/llm/interfaces/llm-provider.interface.ts
+export const LLM_PROVIDER = Symbol('LLM_PROVIDER');
+export interface LlmProvider {
   generate(input: GenerateInput): Promise<GenerateOutput>;
   stream(input: GenerateInput): AsyncIterable<string>;
 }
 
-// modules/llm/domain/ports/embedding.port.ts
-export const EMBEDDING_PORT = Symbol('EMBEDDING_PORT');
-export interface EmbeddingPort {
+// modules/llm/interfaces/embedding-provider.interface.ts
+export const EMBEDDING_PROVIDER = Symbol('EMBEDDING_PROVIDER');
+export interface EmbeddingProvider {
   embedDocuments(texts: string[]): Promise<number[][]>;
   embedQuery(text: string): Promise<number[]>;
 }
 
-// modules/documents/domain/ports/chunk-vector.repository.ts
-export const CHUNK_VECTOR_REPOSITORY = Symbol('CHUNK_VECTOR_REPOSITORY');
-export interface ChunkVectorRepository {
-  saveMany(chunks: ChunkWithEmbedding[]): Promise<void>;
-  similaritySearch(params: SimilaritySearchParams): Promise<RetrievedChunk[]>;
-  deleteByDocumentId(documentId: string): Promise<void>;
-}
-
-// modules/documents/domain/ports/retriever.port.ts
-export const RETRIEVER_PORT = Symbol('RETRIEVER_PORT');
-export interface RetrieverPort {
+// modules/documents/retrieval/retriever.interface.ts
+export const RETRIEVER = Symbol('RETRIEVER');
+export interface Retriever {
   retrieve(params: RetrieveParams): Promise<RetrievedChunk[]>; // embeds the query, searches, applies the threshold
 }
-
-// modules/auth/domain/ports/token.port.ts
-export const TOKEN_PORT = Symbol('TOKEN_PORT');
-export interface TokenPort {
-  signAccess(payload: TokenPayload): string;
-  signRefresh(payload: TokenPayload): string;
-  verifyAccess(token: string): TokenPayload;
-  verifyRefresh(token: string): TokenPayload;
-}
-
-// shared/domain/ports/logger.port.ts
-export const LOGGER_PORT = Symbol('LOGGER_PORT');
-export interface LoggerPort {
-  info(message: string, context?: Record<string, unknown>): void;
-  warn(message: string, context?: Record<string, unknown>): void;
-  error(message: string, context?: Record<string, unknown>): void;
-}
-
-// shared/domain/ports/metrics.port.ts
-export const METRICS_PORT = Symbol('METRICS_PORT');
-export interface MetricsPort {
-  increment(name: string, labels?: Record<string, string>, value?: number): void;
-  observe(name: string, value: number, labels?: Record<string, string>): void;
-}
 ```
-
-### 4.6 Adapter Strategy (Gemini vs LangChain)
-
-Both implementations satisfy the same ports:
-
-| Port | Day 1-2 adapter | Day 3 adapter |
-|---|---|---|
-| `LLMPort` | `GeminiLLMAdapter` (raw SDK) | `LangChainLLMAdapter` |
-| `EmbeddingPort` | `GeminiEmbeddingAdapter` | `LangChainEmbeddingAdapter` |
-| `RetrieverPort` | `PgvectorRetrieverAdapter` (hand-written: embed, SQL similarity search, threshold) | `LangChainRetrieverAdapter` (LangChain retriever / vector store) |
 
 The active implementation is chosen by an environment variable (`AI_PROVIDER=gemini | langchain`):
 
-- `llm.module.ts` binds `LLM_PORT` and `EMBEDDING_PORT`
-- `documents.module.ts` binds `RETRIEVER_PORT`
+- `llm.module.ts` binds `LLM_PROVIDER` and `EMBEDDING_PROVIDER`
+- `documents.module.ts` binds `RETRIEVER`
 
-No use case changes. Both can be benchmarked on the same documents and questions.
+Services such as `ChatService` and `IngestionService` inject these tokens, so switching providers means changing one binding, not the services.
 
 ## 5. Backend Folder Structure
 
-**Feature-first:** code is grouped by feature, and each feature contains its own Clean Architecture layers (`domain`, `application`, `infrastructure`, `presentation`). A layer folder is only created when the feature actually needs it.
+**Feature-first:** code is grouped by feature. Inside a feature, files are grouped by role (controller, service, entity, dto). Create a subfolder only when the feature actually needs it.
 
 ```
-PolkaDocs-backend/
+knowly-backend/
 ├── src/
 │   ├── main.ts
 │   ├── app.module.ts
@@ -247,171 +201,93 @@ PolkaDocs-backend/
 │   ├── modules/
 │   │   │
 │   │   ├── auth/
-│   │   │   ├── domain/
-│   │   │   │   ├── errors/
-│   │   │   │   └── ports/
-│   │   │   │       ├── password-hasher.port.ts
-│   │   │   │       ├── token.port.ts
-│   │   │   │       └── refresh-token.repository.ts
-│   │   │   ├── application/
-│   │   │   │   └── use-cases/
-│   │   │   │       ├── register.use-case.ts
-│   │   │   │       ├── login.use-case.ts
-│   │   │   │       ├── refresh-token.use-case.ts
-│   │   │   │       └── logout.use-case.ts
-│   │   │   ├── infrastructure/
-│   │   │   │   ├── bcrypt-password-hasher.adapter.ts
-│   │   │   │   ├── jwt-token.adapter.ts
-│   │   │   │   └── persistence/
-│   │   │   │       ├── refresh-token.orm-entity.ts
-│   │   │   │       ├── refresh-token.mapper.ts
-│   │   │   │       └── refresh-token.repository.impl.ts
-│   │   │   ├── presentation/
-│   │   │   │   ├── controllers/auth.controller.ts
-│   │   │   │   ├── dto/
-│   │   │   │   └── guards/jwt-auth.guard.ts
-│   │   │   └── auth.module.ts              # registers JwtAuthGuard as APP_GUARD
+│   │   │   ├── controllers/auth.controller.ts
+│   │   │   ├── services/auth.service.ts          # register, login, refresh, logout
+│   │   │   ├── entities/refresh-token.entity.ts
+│   │   │   ├── guards/jwt-auth.guard.ts
+│   │   │   ├── dto/
+│   │   │   └── auth.module.ts                    # registers JwtAuthGuard as APP_GUARD
 │   │   │
 │   │   ├── users/
-│   │   │   ├── domain/
-│   │   │   │   ├── entities/user.entity.ts
-│   │   │   │   └── ports/user.repository.ts
-│   │   │   ├── application/
-│   │   │   │   └── use-cases/
-│   │   │   │       ├── get-profile.use-case.ts
-│   │   │   │       └── update-profile.use-case.ts
-│   │   │   ├── infrastructure/
-│   │   │   │   └── persistence/
-│   │   │   │       ├── user.orm-entity.ts
-│   │   │   │       ├── user.mapper.ts
-│   │   │   │       └── user.repository.impl.ts
-│   │   │   ├── presentation/
-│   │   │   │   ├── controllers/users.controller.ts
-│   │   │   │   └── dto/
+│   │   │   ├── controllers/users.controller.ts
+│   │   │   ├── services/users.service.ts
+│   │   │   ├── entities/user.entity.ts
+│   │   │   ├── dto/
 │   │   │   └── users.module.ts
 │   │   │
 │   │   ├── documents/
-│   │   │   ├── domain/
-│   │   │   │   ├── entities/
-│   │   │   │   │   ├── document.entity.ts
-│   │   │   │   │   └── document-chunk.entity.ts
-│   │   │   │   ├── value-objects/document-status.vo.ts
-│   │   │   │   ├── ports/
-│   │   │   │   │   ├── document.repository.ts
-│   │   │   │   │   ├── chunk-vector.repository.ts
-│   │   │   │   │   ├── file-storage.port.ts
-│   │   │   │   │   ├── text-extractor.port.ts
-│   │   │   │   │   └── retriever.port.ts
-│   │   │   │   └── errors/
-│   │   │   ├── application/
-│   │   │   │   ├── use-cases/
-│   │   │   │   │   ├── upload-document.use-case.ts
-│   │   │   │   │   ├── ingest-document.use-case.ts
-│   │   │   │   │   ├── list-documents.use-case.ts
-│   │   │   │   │   ├── get-document.use-case.ts
-│   │   │   │   │   ├── delete-document.use-case.ts
-│   │   │   │   │   └── reprocess-document.use-case.ts
-│   │   │   │   └── services/chunker.service.ts
-│   │   │   ├── infrastructure/
-│   │   │   │   ├── persistence/
-│   │   │   │   │   ├── document.orm-entity.ts
-│   │   │   │   │   ├── document-chunk.orm-entity.ts
-│   │   │   │   │   ├── document.mapper.ts
-│   │   │   │   │   └── document.repository.impl.ts
-│   │   │   │   ├── pgvector/
-│   │   │   │   │   └── chunk-vector.repository.impl.ts
-│   │   │   │   ├── storage/
-│   │   │   │   │   └── local-file-storage.adapter.ts
-│   │   │   │   ├── extraction/
-│   │   │   │   │   ├── composite-text-extractor.adapter.ts   # picks an extractor by MIME type
-│   │   │   │   │   ├── pdf.extractor.ts
-│   │   │   │   │   ├── docx.extractor.ts
-│   │   │   │   │   ├── txt.extractor.ts
-│   │   │   │   │   └── markdown.extractor.ts
-│   │   │   │   └── retrieval/
-│   │   │   │       ├── pgvector-retriever.adapter.ts         # Day 2
-│   │   │   │       └── langchain-retriever.adapter.ts        # Day 3
-│   │   │   ├── presentation/
-│   │   │   │   ├── controllers/documents.controller.ts
-│   │   │   │   └── dto/
-│   │   │   └── documents.module.ts          # binds RETRIEVER_PORT by AI_PROVIDER
+│   │   │   ├── controllers/documents.controller.ts
+│   │   │   ├── services/
+│   │   │   │   ├── documents.service.ts          # upload, list, get, delete, reprocess
+│   │   │   │   ├── ingestion.service.ts          # extract -> clean -> chunk -> embed -> save
+│   │   │   │   ├── chunker.service.ts
+│   │   │   │   ├── text-extractor.service.ts     # picks an extractor by MIME type
+│   │   │   │   └── file-storage.service.ts       # local disk
+│   │   │   ├── extractors/
+│   │   │   │   ├── pdf.extractor.ts
+│   │   │   │   ├── docx.extractor.ts
+│   │   │   │   ├── txt.extractor.ts
+│   │   │   │   └── markdown.extractor.ts
+│   │   │   ├── retrieval/
+│   │   │   │   ├── retriever.interface.ts
+│   │   │   │   ├── pgvector.retriever.ts         # Day 2
+│   │   │   │   └── langchain.retriever.ts        # Day 3
+│   │   │   ├── repositories/
+│   │   │   │   └── document-chunk.repository.ts  # custom TypeORM repo: raw SQL for vector search
+│   │   │   ├── entities/
+│   │   │   │   ├── document.entity.ts
+│   │   │   │   └── document-chunk.entity.ts
+│   │   │   ├── dto/
+│   │   │   └── documents.module.ts               # binds RETRIEVER by AI_PROVIDER
 │   │   │
 │   │   ├── chat/
-│   │   │   ├── domain/
-│   │   │   │   ├── entities/
-│   │   │   │   │   ├── conversation.entity.ts
-│   │   │   │   │   └── message.entity.ts
-│   │   │   │   └── ports/
-│   │   │   │       ├── conversation.repository.ts
-│   │   │   │       └── message.repository.ts
-│   │   │   ├── application/
-│   │   │   │   ├── use-cases/
-│   │   │   │   │   ├── create-conversation.use-case.ts
-│   │   │   │   │   ├── ask-question.use-case.ts
-│   │   │   │   │   ├── list-conversations.use-case.ts
-│   │   │   │   │   ├── get-messages.use-case.ts
-│   │   │   │   │   ├── rename-conversation.use-case.ts
-│   │   │   │   │   └── delete-conversation.use-case.ts
-│   │   │   │   └── services/prompt-builder.service.ts
-│   │   │   ├── infrastructure/
-│   │   │   │   └── persistence/
-│   │   │   │       ├── conversation.orm-entity.ts
-│   │   │   │       ├── message.orm-entity.ts
-│   │   │   │       ├── conversation.mapper.ts
-│   │   │   │       ├── message.mapper.ts
-│   │   │   │       ├── conversation.repository.impl.ts
-│   │   │   │       └── message.repository.impl.ts
-│   │   │   ├── presentation/
-│   │   │   │   ├── controllers/chat.controller.ts   # SSE streaming
-│   │   │   │   └── dto/
+│   │   │   ├── controllers/chat.controller.ts    # SSE streaming
+│   │   │   ├── services/
+│   │   │   │   ├── chat.service.ts               # conversations + ask question (RAG flow)
+│   │   │   │   └── prompt-builder.service.ts
+│   │   │   ├── entities/
+│   │   │   │   ├── conversation.entity.ts
+│   │   │   │   └── message.entity.ts
+│   │   │   ├── dto/
 │   │   │   └── chat.module.ts
 │   │   │
-│   │   ├── llm/                                 # the swappable AI layer
-│   │   │   ├── domain/
-│   │   │   │   └── ports/
-│   │   │   │       ├── llm.port.ts
-│   │   │   │       └── embedding.port.ts
-│   │   │   ├── infrastructure/
-│   │   │   │   ├── gemini/
-│   │   │   │   │   ├── gemini-llm.adapter.ts
-│   │   │   │   │   ├── gemini-embedding.adapter.ts
-│   │   │   │   │   └── gemini.client.ts
-│   │   │   │   └── langchain/
-│   │   │   │       ├── langchain-llm.adapter.ts
-│   │   │   │       └── langchain-embedding.adapter.ts
-│   │   │   └── llm.module.ts                    # binds LLM_PORT / EMBEDDING_PORT by AI_PROVIDER
+│   │   ├── llm/                                  # the swappable AI layer
+│   │   │   ├── interfaces/
+│   │   │   │   ├── llm-provider.interface.ts
+│   │   │   │   └── embedding-provider.interface.ts
+│   │   │   ├── gemini/
+│   │   │   │   ├── gemini-llm.provider.ts
+│   │   │   │   ├── gemini-embedding.provider.ts
+│   │   │   │   └── gemini.client.ts
+│   │   │   ├── langchain/
+│   │   │   │   ├── langchain-llm.provider.ts
+│   │   │   │   └── langchain-embedding.provider.ts
+│   │   │   └── llm.module.ts                     # binds LLM_PROVIDER / EMBEDDING_PROVIDER by AI_PROVIDER
 │   │   │
 │   │   └── observability/
-│   │       ├── infrastructure/
-│   │       │   ├── logger.adapter.ts            # implements LoggerPort
-│   │       │   └── metrics.adapter.ts           # implements MetricsPort (prom-client)
-│   │       ├── presentation/
-│   │       │   ├── controllers/
-│   │       │   │   ├── health.controller.ts
-│   │       │   │   └── metrics.controller.ts
-│   │       │   └── interceptors/metrics.interceptor.ts
-│   │       └── observability.module.ts          # @Global, exports LOGGER_PORT and METRICS_PORT
+│   │       ├── controllers/
+│   │       │   ├── health.controller.ts
+│   │       │   └── metrics.controller.ts
+│   │       ├── interceptors/metrics.interceptor.ts
+│   │       ├── services/metrics.service.ts       # prom-client wrapper
+│   │       └── observability.module.ts           # @Global, exports MetricsService
 │   │
-│   └── shared/                                  # feature-agnostic only
-│       ├── domain/
-│       │   ├── base.entity.ts
-│       │   ├── domain.error.ts
-│       │   └── ports/
-│       │       ├── logger.port.ts
-│       │       └── metrics.port.ts
-│       ├── infrastructure/
-│       │   ├── config/
-│       │   │   ├── env.validation.ts
-│       │   │   └── configuration.ts
-│       │   └── database/
-│       │       ├── database.module.ts           # TypeORM setup
-│       │       └── migrations/
-│       └── presentation/
-│           ├── decorators/
-│           │   ├── public.decorator.ts          # @Public(): opt out of the global auth guard
-│           │   └── current-user.decorator.ts    # @CurrentUser(): authenticated user in handlers
-│           ├── filters/domain-exception.filter.ts
-│           └── pipes/
+│   ├── common/                                   # feature-agnostic only
+│   │   ├── entities/base.entity.ts
+│   │   ├── errors/app.exception.ts               # AppException with a stable error code
+│   │   ├── decorators/
+│   │   │   ├── public.decorator.ts               # @Public(): opt out of the global auth guard
+│   │   │   └── current-user.decorator.ts         # @CurrentUser(): authenticated user in handlers
+│   │   ├── filters/app-exception.filter.ts
+│   │   └── pipes/
+│   │
+│   ├── config/
+│   │   ├── env.validation.ts
+│   │   └── configuration.ts
+│   │
+│   └── database/
+│       ├── database.module.ts                    # TypeORM setup
+│       └── migrations/
 │
 ├── test/
 │   ├── unit/
@@ -431,25 +307,26 @@ PolkaDocs-backend/
 
 ### 5.1 Feature Rules
 
-1. **The dependency rule applies inside every feature.** `domain` imports nothing outward, `application` imports only `domain`, `infrastructure` and `presentation` point inward.
-2. **Cross-feature imports are limited to domain.** A feature may import another feature's `domain` (ports, entities, value objects, injection tokens). It must not import another feature's `infrastructure` or `presentation`. For example, `chat` uses `RetrieverPort` from `documents/domain` and `LLMPort` from `llm/domain`, and never knows which adapter is behind them.
-3. **Features are folders, not isolated modules.** There is no per-feature data ownership or enforced public API. That would be a modular monolith, which is a non-goal. Joins across feature tables are fine.
-4. **`shared/` stays small and generic.** It holds only things that belong to no feature: base entity, domain error, logger and metrics ports, config, database setup, filters, and the `@Public()` / `@CurrentUser()` decorators. If something is about documents, it lives in `documents/`.
-5. **Create layer folders only when needed.** For example, `llm` has no `application` or `presentation` folder.
-6. **Lint the dependency rule.** Use `eslint-plugin-boundaries` or `dependency-cruiser` to fail the build on layer violations and on cross-feature imports of `infrastructure` and `presentation`.
+1. **Controller -> Service -> Data access, always.** Controllers never skip the service layer.
+2. **Cross-feature calls go through services.** A feature uses another feature by importing its NestJS module and injecting the exported service (or an AI interface token). For example, `ChatService` injects the `RETRIEVER` token and `LLM_PROVIDER` token and never knows which implementation is behind them. Avoid reaching into another feature's controllers or internals.
+3. **Features are folders, not isolated modules.** There is no per-feature data ownership or enforced public API. Joins across feature tables are fine.
+4. **`common/` stays small and generic.** Base entity, app exception, filters, and the `@Public()` / `@CurrentUser()` decorators. If something is about documents, it lives in `documents/`.
+5. **Create folders only when needed.** For example, `llm` has no controllers or entities.
+6. **No lint-enforced boundaries in V1.** Keep it simple. Add import rules later only if the codebase starts to tangle.
 
 ### 5.2 Notes
 
-- Each feature has a `*.module.ts` at its root for NestJS dependency injection wiring (ports bound to adapters). These are not deployment boundaries and nothing is meant to be split out later. This is a single monolith.
-- **Auth guard:** `JwtAuthGuard` lives in `auth/presentation/guards` because it verifies tokens through `TokenPort`. `auth.module.ts` registers it as `APP_GUARD`, so every route is protected by default and other features never import it. Public routes (register, login, refresh, health, metrics) use `@Public()`. Controllers read the authenticated user with `@CurrentUser()` from `shared`.
-- **Module wiring:** `llm.module.ts` exports `LLM_PORT` and `EMBEDDING_PORT`. `documents.module.ts` imports `LlmModule` and exports `RETRIEVER_PORT`. `chat.module.ts` imports `DocumentsModule` and `LlmModule`. `ObservabilityModule` is global.
-- **ORM entities and migrations:** ORM entities live with their feature in `infrastructure/persistence`. Migrations are global in `shared/infrastructure/database/migrations`, since there is one database.
-- **DTOs:** request/response DTOs (with validation decorators) live in `presentation/dto`. Use cases take and return plain TypeScript types defined in `application`.
+- Each feature has a `*.module.ts` at its root for NestJS wiring. These are not deployment boundaries. This is a single monolith.
+- **Auth guard:** `JwtAuthGuard` lives in `auth/guards` and verifies tokens with `JwtService`. `auth.module.ts` registers it as `APP_GUARD`, so every route is protected by default. Public routes (register, login, refresh, health, metrics) use `@Public()`. Controllers read the authenticated user with `@CurrentUser()`.
+- **Module wiring:** `llm.module.ts` exports `LLM_PROVIDER` and `EMBEDDING_PROVIDER`. `documents.module.ts` imports `LlmModule` and exports `RETRIEVER`. `chat.module.ts` imports `DocumentsModule` and `LlmModule`. `ObservabilityModule` is global.
+- **Entities and migrations:** TypeORM entities live with their feature in `entities/`. Migrations are global in `database/migrations`, since there is one database.
+- **DTOs:** request/response DTOs (with validation decorators) live in each feature's `dto/` folder.
+- **Vector queries:** TypeORM does not understand pgvector operators, so similarity search lives in a custom repository (`document-chunk.repository.ts`) using raw SQL.
 
 ## 6. Frontend Folder Structure
 
 ```
-PolkaDocs-frontend/
+knowly-frontend/
 ├── public/
 │   ├── manifest.webmanifest
 │   └── icons/
@@ -500,7 +377,7 @@ Upload  ->  Validate  ->  Store file  ->  Create Document (status: uploaded)
 ```
 
 - Status transitions: `uploaded -> processing -> ready | failed`
-- `UploadDocumentUseCase` stores the file, creates the record, and starts `IngestDocumentUseCase` without awaiting it. No message broker in V1, so it runs inside the same process.
+- `DocumentsService.upload()` stores the file, creates the record, and starts `IngestionService.ingest()` without awaiting it. No message broker in V1, so it runs inside the same process.
 - The upload endpoint returns immediately; the frontend polls document status.
 - On startup, documents stuck in `processing` are marked `failed` (their job died with the old process) and can be re-processed.
 - Re-processing deletes the old chunks first, then runs the pipeline again.
@@ -509,13 +386,15 @@ Upload  ->  Validate  ->  Store file  ->  Create Document (status: uploaded)
 
 ```
 User question
-  -> RetrieverPort.retrieve(question, scope)
+  -> Retriever.retrieve(question, scope)
        (embed query -> similarity search, top-k, scoped to user/documents -> relevance threshold)
   -> build prompt (system rules + context chunks + history + question)
-  -> LLMPort.stream(prompt)
+  -> LlmProvider.stream(prompt)
   -> persist message + citations
   -> stream tokens to client, then send citations
 ```
+
+`ChatService.askQuestion()` orchestrates this flow.
 
 If no chunk passes the relevance threshold, the assistant answers that it could not find the information in the uploaded documents instead of guessing.
 
@@ -528,7 +407,7 @@ If no chunk passes the relevance threshold, the assistant answers that it could 
 [User]    Current question
 ```
 
-Prompts live in `modules/chat/application/services/prompt-builder.service.ts`, versioned in code, never inline in controllers or adapters.
+Prompts live in `modules/chat/services/prompt-builder.service.ts`, versioned in code, never inline in controllers or providers.
 
 ### 7.4 Chunking Defaults (tunable)
 
@@ -706,26 +585,25 @@ Base path: `/api/v1`. All routes require a JWT unless marked `@Public()` (auth r
 
 ### 10.1 Architecture Rules
 
-1. `domain/` must not import any framework or vendor package (`@nestjs/*`, `@google/genai`, `langchain`, `pg`, any ORM). `application/` may import only `@Injectable` and `@Inject` from `@nestjs/common`, and no vendor or ORM packages. Enforce with an import-boundary lint rule (`eslint-plugin-boundaries` or `dependency-cruiser`).
-2. Controllers contain no business logic. They validate input, call one use case, and map the result.
-3. One use case per file, one public `execute()` method.
-4. Repositories return domain entities, never ORM entities. Use mappers in infrastructure.
-5. Inject ports through symbol tokens (`LLM_PORT`, `EMBEDDING_PORT`, `RETRIEVER_PORT`), not concrete classes.
-6. New AI vendor or framework = new adapter in `modules/llm/infrastructure/` (or the retriever adapters in `documents/infrastructure/retrieval/`). No use case changes.
-7. Anything that talks to an external system is a port plus an adapter, never an application service.
-8. Cross-feature imports are limited to another feature's `domain` (see 5.1).
+1. Controllers contain no business logic. They validate input, call one service method, and return the result.
+2. Business logic lives in services. Services use TypeORM repositories directly.
+3. Use TypeORM entities everywhere. No separate domain model, no mappers.
+4. Only the AI layer is abstracted (`LlmProvider`, `EmbeddingProvider`, `Retriever`), injected through symbol tokens (`LLM_PROVIDER`, `EMBEDDING_PROVIDER`, `RETRIEVER`).
+5. New AI vendor or framework = a new provider class in `modules/llm/` (or a new retriever in `documents/retrieval/`). No service changes.
+6. Do not add an interface or abstraction for anything with a single implementation. Add it later if a second implementation actually shows up.
+7. Cross-feature calls go through NestJS module imports and exported services.
+8. Keep services focused. If a service grows too large, split it by responsibility (as `IngestionService` is split from `DocumentsService`), not by pattern.
 
 ### 10.2 Naming and Code Style
 
 | Item | Convention |
 |---|---|
-| Files | `kebab-case` with role suffix: `ask-question.use-case.ts`, `gemini-llm.adapter.ts` |
-| Ports | `*.port.ts` |
-| Repository ports | `*.repository.ts` |
-| Adapters (non-repository ports) | `*.adapter.ts` |
-| Repository implementations | `*.repository.impl.ts` |
-| ORM entities / mappers | `*.orm-entity.ts` / `*.mapper.ts` |
-| Application services | `*.service.ts` (pure logic only) |
+| Files | `kebab-case` with role suffix: `documents.service.ts`, `gemini-llm.provider.ts` |
+| Controllers | `*.controller.ts` |
+| Services | `*.service.ts` |
+| Entities | `*.entity.ts` |
+| AI providers / retrievers | `*.provider.ts` / `*.retriever.ts` |
+| Interfaces | `*.interface.ts` |
 | Classes | `PascalCase` |
 | DTOs | `CreateConversationRequestDto`, `MessageResponseDto` |
 | Env vars | `SCREAMING_SNAKE_CASE` |
@@ -735,9 +613,9 @@ TypeScript `strict: true`. No `any` without a comment explaining why. Prefer `un
 
 ### 10.3 Error Handling
 
-- Domain errors extend a `DomainError` base with a stable `code` (see the error code table in section 9).
-- A global exception filter maps domain errors to HTTP status codes.
-- Adapters catch vendor errors (Gemini rate limit, timeout) and rethrow as domain/application errors, so vendor types never leak upward.
+- Business errors throw `AppException` with a stable `code` (see the error code table in section 9).
+- A global exception filter maps `AppException` to the HTTP status and the standard error shape.
+- Provider classes catch vendor errors (Gemini rate limit, timeout) and rethrow them as `AppException` (`LLM_RATE_LIMITED`, `LLM_UNAVAILABLE`), so vendor types never leak into services or controllers.
 - Retry only idempotent calls (embeddings, generation) with exponential backoff and a cap.
 - Never log full document text, tokens, or passwords.
 
@@ -761,19 +639,19 @@ TypeScript `strict: true`. No `any` without a comment explaining why. Prefer `un
 ### 10.6 Configuration and Secrets
 
 - Doppler injects environment variables at runtime (`doppler run -- <command>`).
-- A single typed `ConfigService` is the only code that reads `process.env`.
+- NestJS `ConfigService` is the only code that reads `process.env`.
 
 | Variable | Example (placeholder) | Purpose |
 |---|---|---|
 | `NODE_ENV` | `development` | Runtime mode |
 | `PORT` | `3000` | API port |
-| `DATABASE_URL` | `postgres://PolkaDocs:<password>@localhost:5432/PolkaDocs` | Postgres connection |
+| `DATABASE_URL` | `postgres://knowly:<password>@localhost:5432/knowly` | Postgres connection |
 | `JWT_ACCESS_SECRET` | `<random 32+ chars>` | Access token signing |
 | `JWT_REFRESH_SECRET` | `<random 32+ chars>` | Refresh token signing |
 | `JWT_ACCESS_TTL` | `15m` | Access token lifetime |
 | `JWT_REFRESH_TTL` | `7d` | Refresh token lifetime |
 | `GEMINI_API_KEY` | `<your key>` | Gemini access |
-| `AI_PROVIDER` | `gemini` or `langchain` | Which adapters are bound |
+| `AI_PROVIDER` | `gemini` or `langchain` | Which AI implementations are bound |
 | `CHAT_MODEL` | `<gemini chat model>` | Generation model |
 | `EMBEDDING_MODEL` | `<gemini embedding model>` | Embedding model |
 | `EMBEDDING_DIMENSIONS` | `768` | Must match `vector(N)` |
@@ -788,7 +666,7 @@ TypeScript `strict: true`. No `any` without a comment explaining why. Prefer `un
 ### 10.7 Logging
 
 - Structured JSON logs with a request ID on every line.
-- Use cases and adapters log through `LoggerPort`, never a concrete logger.
+- Services log through the NestJS `Logger`.
 - Log pipeline milestones: ingestion started, chunk count, embedding duration, retrieval hits, LLM latency, token counts.
 - Levels: `error` for failures, `warn` for retries and degraded behavior, `info` for milestones, `debug` off in production.
 
@@ -796,7 +674,7 @@ TypeScript `strict: true`. No `any` without a comment explaining why. Prefer `un
 
 - Branch naming: `feat/...`, `fix/...`, `chore/...`
 - Conventional commits (`feat: add chunker service`)
-- Small commits per use case or adapter
+- Small commits per service or provider
 - Migrations are forward-only and committed with the change that needs them
 
 ## 11. Infrastructure and DevOps
@@ -834,7 +712,7 @@ doppler run -- docker compose up --build
 doppler run -- npm run migration:run
 
 # 4. Frontend (separate terminal)
-cd PolkaDocs-frontend && npm install && npm run dev
+cd knowly-frontend && npm install && npm run dev
 ```
 
 For day-to-day backend development, run only the database in Docker and the API locally:
@@ -861,7 +739,7 @@ Script names (`migration:run`, `start:dev`) are suggestions; align them with you
 | `ingestion_jobs_total` | Counter | Labels: `status=ready\|failed` |
 | `errors_total` | Counter | By error code |
 
-Use cases and adapters record metrics through `MetricsPort`. The `provider` label is what makes the Day 3 comparison measurable: same questions, two providers, side by side in Grafana.
+Services and providers record metrics through `MetricsService` (a thin wrapper over `prom-client`, exported by the global `ObservabilityModule`). The `provider` label is what makes the Day 3 comparison measurable: same questions, two providers, side by side in Grafana.
 
 ### Dashboards (Grafana)
 
@@ -873,9 +751,9 @@ Use cases and adapters record metrics through `MetricsPort`. The `provider` labe
 
 | Level | Scope | Notes |
 |---|---|---|
-| Unit | Use cases, chunker, prompt builder | Ports mocked; fast |
-| Integration | Repositories against real Postgres + pgvector | Use a test container |
-| Contract | Both LLM adapters (and both retriever adapters) against the same port expectations | Same test suite run per adapter |
+| Unit | Services (`ChatService`, `IngestionService`), chunker, prompt builder | Repositories and AI providers mocked; fast |
+| Integration | Services + TypeORM repositories against real Postgres + pgvector | Use a test container; covers the vector SQL |
+| Contract | Both AI implementations (LLM, embedding, retriever) against the same expectations | Same test suite run per implementation |
 | E2E | Upload -> ingest -> ask -> cited answer | Small fixed sample documents |
 
 For the RAG comparison, keep a small **evaluation set**: a few documents and 10 to 15 questions with expected source chunks. Run it against both providers and compare answer quality, citation accuracy, and latency.
@@ -884,9 +762,9 @@ For the RAG comparison, keep a small **evaluation set**: a few documents and 10 
 
 | Day | Focus | Deliverables |
 |---|---|---|
-| **1** | LLM fundamentals with Gemini SDK | Project skeleton with feature folders and Clean Architecture layers, `shared/` setup, `LLMPort` + Gemini adapter with streaming, Auth + Users modules |
-| **2** | RAG without LangChain | Document upload, text extraction, chunking, embeddings, pgvector storage, `PgvectorRetrieverAdapter`, chat endpoint with citations |
-| **3** | LangChain + infra | LangChain LLM, embedding, and retriever adapters behind the same ports, side-by-side comparison on the evaluation set, Docker, Doppler |
+| **1** | LLM fundamentals with Gemini SDK | Project skeleton with feature folders and the controller/service layers, `common/` setup, `LlmProvider` + Gemini provider with streaming, Auth + Users modules |
+| **2** | RAG without LangChain | Document upload, text extraction, chunking, embeddings, pgvector storage, `PgvectorRetriever`, chat endpoint with citations |
+| **3** | LangChain + infra | LangChain LLM, embedding, and retriever implementations behind the same interfaces, side-by-side comparison on the evaluation set, Docker, Doppler |
 | **4** | Frontend and monitoring | React PWA (upload, chat, installable), Prometheus metrics, Grafana dashboards, polish and docs |
 
 **Stretch goals** (cut first if time runs short): offline cache of chat history and document list, polished Grafana dashboards, refresh token rotation UI handling.
@@ -895,7 +773,6 @@ For the RAG comparison, keep a small **evaluation set**: a few documents and 10 
 
 Deferred on purpose so V1 stays shippable:
 
-- Microservices split
 - LangGraph and agentic workflows
 - Hybrid search (keyword + vector) and reranking
 - Background job queue for ingestion
@@ -903,22 +780,25 @@ Deferred on purpose so V1 stays shippable:
 - Evaluation automation and prompt versioning
 - Cloud object storage for files
 
+Microservices are not planned. If the codebase outgrows the simple layering, revisit the structure then.
+
 ## 16. Decision Log
 
 | # | Decision | Reason |
 |---|---|---|
-| 1 | Monolith, not microservices or modular monolith | Four-day scope; learning focus is LLMs and RAG, not distributed systems |
-| 2 | Clean Architecture from Day 1 | Keeps business logic independent of Gemini, LangChain, and the database |
-| 3 | Feature-first folders with layers inside each feature | Everything about a feature in one place; matches the structure already used in other projects |
+| 1 | Traditional monolith, no microservices, no modular monolith | Four-day scope; learning focus is LLMs and RAG, not distributed systems |
+| 2 | Layered architecture (controller, service, data access) instead of Clean Architecture | Avoid unnecessary complexity in a four-day learning project; more time on LLMs, RAG, LangChain |
+| 3 | Feature-first folders, files grouped by role inside each feature | Everything about a feature in one place; matches the structure used in other projects |
 | 4 | RAG assistant, not an agent | Keeps scope achievable and the behavior predictable |
 | 5 | Raw Gemini SDK first, LangChain on Day 3 | Understand the workflow before abstracting it, then compare both |
-| 6 | Everything AI-related behind ports (`LLMPort`, `EmbeddingPort`, `RetrieverPort`) | Swapping implementations needs no use case changes |
+| 6 | Abstractions only when necessary; the AI layer (`LlmProvider`, `EmbeddingProvider`, `Retriever`) is the one place that qualifies | Two real implementations (Gemini and LangChain) need to be swappable and comparable |
 | 7 | PostgreSQL + pgvector instead of a separate vector DB | One database to run and back up; enough for V1 scale |
-| 8 | TypeORM with raw SQL for vector queries | First-class NestJS support and built-in migrations; pgvector queries are raw SQL either way |
+| 8 | TypeORM entities used directly, raw SQL for vector queries | First-class NestJS support and built-in migrations; no mappers or repository interfaces to maintain |
 | 9 | Global `JwtAuthGuard` with `@Public()` opt-out | Safe by default; no feature imports auth internals |
 | 10 | In-process async ingestion, no broker | No extra infrastructure in V1; stuck jobs are recovered on startup |
 | 11 | SSE for streaming chat answers | Simple one-way streaming over plain HTTP |
 | 12 | 768-dimension embeddings with an HNSW index | Within pgvector's HNSW dimension limit; smaller and faster to search |
+| 13 | NestJS built-ins (`Logger`, `JwtService`, `ConfigService`) and a plain `MetricsService` instead of custom ports | No wrappers without a second implementation |
 
 ## 17. Glossary
 
@@ -931,13 +811,13 @@ Deferred on purpose so V1 stays shippable:
 | **Top-k** | How many of the closest chunks are retrieved |
 | **Relevance threshold** | Minimum similarity score a chunk needs to be used as context |
 | **Citation** | A reference from an answer back to the chunk and document it came from |
-| **Port** | Interface owned by the core that describes something it needs from outside |
-| **Adapter** | Implementation of a port using a specific vendor or library |
-| **Use case** | One business action, implemented as a single class with an `execute()` method |
+| **Layered architecture** | Code split by responsibility: controllers handle HTTP, services hold business logic, data access talks to the DB and external systems |
+| **Service** | A class holding business logic for a feature, called by controllers |
+| **Provider (AI)** | A swappable implementation of the LLM or embedding interface (Gemini or LangChain) |
 | **SSE** | Server-Sent Events: one-way streaming from server to browser over HTTP |
 | **HNSW** | An approximate nearest-neighbor index type supported by pgvector |
 | **PWA** | Progressive Web App: a web app that can be installed and work with limited connectivity |
 
 ---
 
-*PolkaDocs V1: monolith, Clean Architecture, RAG first, frameworks second.*
+*Knowly V1: traditional monolith, layered architecture, RAG first, frameworks second.*
