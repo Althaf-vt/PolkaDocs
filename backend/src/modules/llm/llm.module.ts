@@ -6,7 +6,6 @@ import { GeminiEmbeddingProvider } from './gemini/gemini-embedding.provider';
 import { LLM_PROVIDER } from './interfaces/llm-provider.interface';
 import { EMBEDDING_PROVIDER } from './interfaces/embedding-provider.interface';
 
-// LLM module providing pluggable LLM and embedding engines
 @Module({
     providers: [
         GeminiClient,
