@@ -1,4 +1,4 @@
-# Knowly: Project Documentation (V1)
+# PolkaDocs: Project Documentation (V1)
 
 > A document-based AI knowledge assistant. Users upload documents and chat with them. Answers are grounded in the uploaded content using RAG, with source citations.
 
@@ -32,9 +32,9 @@
 
 ## 1. Overview
 
-Knowly lets a user upload documents (PDF, DOCX, TXT, Markdown), processes them into searchable vector chunks, and answers questions about them through a chat interface. Every answer cites the chunks it was built from.
+PolkaDocs lets a user upload documents (PDF, DOCX, TXT, Markdown), processes them into searchable vector chunks, and answers questions about them through a chat interface. Every answer cites the chunks it was built from.
 
-Knowly is a **RAG-based assistant**, not an autonomous agent. It retrieves context, builds a prompt, calls the LLM, and returns a grounded answer. It does not plan, use tools, or take actions on its own.
+PolkaDocs is a **RAG-based assistant**, not an autonomous agent. It retrieves context, builds a prompt, calls the LLM, and returns a grounded answer. It does not plan, use tools, or take actions on its own.
 
 The project doubles as a learning vehicle for LLMs, RAG, LangChain, and the supporting ecosystem. The core LLM and RAG workflows are built first with the raw Gemini SDK, then LangChain is introduced on Day 3 and compared against the direct implementation.
 
@@ -42,7 +42,7 @@ The backend is a **traditional monolith with a simple layered architecture**. Th
 
 ### 1.1 Module List to Folder Mapping
 
-The functional module list (see `Knowly-v1-module-list.md`) maps to backend folders like this:
+The functional module list (see `PolkaDocs-v1-module-list.md`) maps to backend folders like this:
 
 | Functional module | Backend folder |
 |---|---|
@@ -54,7 +54,7 @@ The functional module list (see `Knowly-v1-module-list.md`) maps to backend fold
 | Chat | `modules/chat` |
 | LLM | `modules/llm` |
 | Observability | `modules/observability` |
-| Frontend (PWA) | `knowly-frontend` |
+| Frontend (PWA) | `PolkaDocs-frontend` |
 
 ## 2. Goals and Non-Goals
 
@@ -149,7 +149,7 @@ flowchart LR
 
 ### 4.4 Where Abstractions Are Allowed
 
-Abstractions are introduced only when something genuinely has more than one implementation. In Knowly that is the AI layer, because Day 3 compares raw Gemini against LangChain on the same documents and questions.
+Abstractions are introduced only when something genuinely has more than one implementation. In PolkaDocs that is the AI layer, because Day 3 compares raw Gemini against LangChain on the same documents and questions.
 
 | Abstraction | Reason | Implementations |
 |---|---|---|
@@ -193,7 +193,7 @@ Services such as `ChatService` and `IngestionService` inject these tokens, so sw
 **Feature-first:** code is grouped by feature. Inside a feature, files are grouped by role (controller, service, entity, dto). Create a subfolder only when the feature actually needs it.
 
 ```
-knowly-backend/
+backend/
 ├── src/
 │   ├── main.ts
 │   ├── app.module.ts
@@ -326,7 +326,7 @@ knowly-backend/
 ## 6. Frontend Folder Structure
 
 ```
-knowly-frontend/
+frontend/
 ├── public/
 │   ├── manifest.webmanifest
 │   └── icons/
@@ -645,7 +645,7 @@ TypeScript `strict: true`. No `any` without a comment explaining why. Prefer `un
 |---|---|---|
 | `NODE_ENV` | `development` | Runtime mode |
 | `PORT` | `3000` | API port |
-| `DATABASE_URL` | `postgres://knowly:<password>@localhost:5432/knowly` | Postgres connection |
+| `DATABASE_URL` | `postgres://PolkaDocs:<password>@localhost:5432/PolkaDocs` | Postgres connection |
 | `JWT_ACCESS_SECRET` | `<random 32+ chars>` | Access token signing |
 | `JWT_REFRESH_SECRET` | `<random 32+ chars>` | Refresh token signing |
 | `JWT_ACCESS_TTL` | `15m` | Access token lifetime |
@@ -712,7 +712,7 @@ doppler run -- docker compose up --build
 doppler run -- npm run migration:run
 
 # 4. Frontend (separate terminal)
-cd knowly-frontend && npm install && npm run dev
+cd PolkaDocs-frontend && npm install && npm run dev
 ```
 
 For day-to-day backend development, run only the database in Docker and the API locally:
@@ -820,4 +820,4 @@ Microservices are not planned. If the codebase outgrows the simple layering, rev
 
 ---
 
-*Knowly V1: traditional monolith, layered architecture, RAG first, frameworks second.*
+*PolkaDocs V1: traditional monolith, layered architecture, RAG first, frameworks second.*

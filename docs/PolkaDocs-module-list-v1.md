@@ -1,4 +1,4 @@
-# Knowly V1: Module List
+# PolkaDocs V1: Module List
 
 A document-based AI knowledge assistant. Users upload documents and chat with them; answers are grounded in the uploaded content (RAG) with source citations.
 
