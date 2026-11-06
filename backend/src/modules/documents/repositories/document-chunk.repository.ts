@@ -49,7 +49,7 @@ export class DocumentChunkRepository extends Repository<DocumentChunk> {
         chunk_index AS "chunkIndex",
         content,
         metadata,
-        1 - (embedding <=> $1::vector) AS similarity
+        1 - (embedding::vector <=> $1::vector) AS similarity
       FROM document_chunks
       WHERE user_id = $2
     `;
@@ -62,7 +62,7 @@ export class DocumentChunkRepository extends Repository<DocumentChunk> {
         }
 
         params.push(minScore);
-        sql += ` AND (1 - (embedding <=> $1::vector)) >= $${params.length}`;
+        sql += ` AND (1 - (embedding::vector <=> $1::vector)) >= $${params.length}`;
 
         params.push(topK);
         sql += ` ORDER BY similarity DESC LIMIT $${params.length}`;
