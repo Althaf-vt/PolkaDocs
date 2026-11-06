@@ -25,7 +25,12 @@ export default () => ({
     },
     storage: {
         maxUploadMb: parseInt(process.env.MAX_UPLOAD_MB || '10', 10),
-        path: process.env.FILE_STORAGE_PATH || './storage',
+        r2: {
+            endpoint: process.env.R2_ENDPOINT,
+            bucketName: process.env.R2_BUCKET_NAME,
+            accessKeyId: process.env.R2_ACCESS_KEY_ID,
+            secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+        },
     },
     cors: {
         origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
