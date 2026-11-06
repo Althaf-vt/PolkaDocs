@@ -1,4 +1,3 @@
-// backend/src/modules/auth/controllers/auth.controller.ts
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { AuthTokens } from '../interfaces/auth-tokens.interface';

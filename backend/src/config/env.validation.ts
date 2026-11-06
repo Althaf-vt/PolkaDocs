@@ -79,11 +79,24 @@ export class EnvironmentVariables {
 
     @IsString()
     @IsOptional()
-    FILE_STORAGE_PATH: string = './storage';
+    CORS_ORIGIN: string = 'http://localhost:5173';
+
+    // Cloudflare R2 storage credentials
+    @IsString()
+    @IsNotEmpty()
+    R2_ENDPOINT!: string;
 
     @IsString()
-    @IsOptional()
-    CORS_ORIGIN: string = 'http://localhost:5173';
+    @IsNotEmpty()
+    R2_BUCKET_NAME!: string;
+
+    @IsString()
+    @IsNotEmpty()
+    R2_ACCESS_KEY_ID!: string;
+
+    @IsString()
+    @IsNotEmpty()
+    R2_SECRET_ACCESS_KEY!: string;
 }
 
 // Boot-time validation function passed to ConfigModule
