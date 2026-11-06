@@ -1,4 +1,3 @@
-// backend/src/modules/documents/services/file-storage.service.ts
 import { Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -10,12 +9,10 @@ import {
 import { Readable } from 'stream';
 import { AppException } from '../../../common/errors/app.exception';
 
-// Upload output contract returning the key and location
 export interface StoredFileResult {
     storagePath: string;
 }
 
-// Service managing object storage operations on Cloudflare R2
 @Injectable()
 export class FileStorageService {
     private readonly logger = new Logger(FileStorageService.name);
