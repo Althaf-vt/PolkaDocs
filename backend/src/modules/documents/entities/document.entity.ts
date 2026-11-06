@@ -9,6 +9,7 @@ import {
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { DocumentChunk } from './document-chunk.entity';
+import type { SupportedMimeType } from '../constants/mime-types.constant';
 
 export type DocumentStatus = 'uploaded' | 'processing' | 'ready' | 'failed';
 
@@ -26,7 +27,7 @@ export class Document extends BaseEntity {
     fileName!: string;
 
     @Column({ name: 'mime_type', type: 'text', nullable: false })
-    mimeType!: string;
+    mimeType!: SupportedMimeType;
 
     @Column({ name: 'size_bytes', type: 'bigint', nullable: false })
     sizeBytes!: number;
