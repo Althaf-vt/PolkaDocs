@@ -4,7 +4,6 @@ import { GeminiClient } from './gemini.client';
 import { EmbeddingProvider } from '../interfaces/embedding-provider.interface';
 import { AppException } from '../../../common/errors/app.exception';
 
-// Gemini embedding provider handling single-string and batch vectorizations
 @Injectable()
 export class GeminiEmbeddingProvider implements EmbeddingProvider {
     private readonly logger = new Logger(GeminiEmbeddingProvider.name);
