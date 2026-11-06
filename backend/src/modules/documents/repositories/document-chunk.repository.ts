@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { DocumentChunk } from '../entities/document-chunk.entity';
-import { ScoredChunk } from '../interfaces/scored-chunk.interface';
+import { RetrievedChunk } from '../interfaces/retrieved-chunk.interface';
 
 @Injectable()
 export class DocumentChunkRepository extends Repository<DocumentChunk> {
@@ -39,7 +39,7 @@ export class DocumentChunkRepository extends Repository<DocumentChunk> {
         topK: number,
         minScore: number,
         documentIds?: string[],
-    ): Promise<ScoredChunk[]> {
+    ): Promise<RetrievedChunk[]> {
         const vectorString = `[${queryEmbedding.join(',')}]`;
 
         let sql = `
