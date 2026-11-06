@@ -157,7 +157,7 @@ Abstractions are introduced only when something genuinely has more than one impl
 | `EmbeddingProvider` | Gemini vs LangChain comparison | `GeminiEmbeddingProvider`, `LangChainEmbeddingProvider` |
 | `Retriever` | Hand-written pgvector vs LangChain retriever | `PgvectorRetriever` (Day 2), `LangChainRetriever` (Day 3) |
 
-Everything else is a concrete class: file storage (local disk), text extractors (a plain service picking an extractor by MIME type), metrics (`MetricsService` over `prom-client`), logging (Nest `Logger`).
+Everything else is a concrete class: file storage (Cloudflare R2 via S3 SDK), text extractors (a plain service picking an extractor by MIME type), metrics (`MetricsService` over `prom-client`), logging (Nest `Logger`).
 
 ```ts
 // modules/llm/interfaces/llm-provider.interface.ts
@@ -222,7 +222,7 @@ backend/
 │   │   │   │   ├── ingestion.service.ts          # extract -> clean -> chunk -> embed -> save
 │   │   │   │   ├── chunker.service.ts
 │   │   │   │   ├── text-extractor.service.ts     # picks an extractor by MIME type
-│   │   │   │   └── file-storage.service.ts       # local disk
+│   │   │   │   └── file-storage.service.ts       # Cloudflare R2 object storage (S3 SDK)
 │   │   │   ├── extractors/
 │   │   │   │   ├── pdf.extractor.ts
 │   │   │   │   ├── docx.extractor.ts
@@ -660,7 +660,10 @@ TypeScript `strict: true`. No `any` without a comment explaining why. Prefer `un
 | `RETRIEVAL_TOP_K` | `5` | Chunks retrieved per question |
 | `RETRIEVAL_MIN_SCORE` | `<tuned>` | Relevance threshold |
 | `MAX_UPLOAD_MB` | `10` | Upload size limit |
-| `FILE_STORAGE_PATH` | `./storage` | Where uploaded files are kept |
+| `R2_ENDPOINT` | `<r2 endpoint url>` | Cloudflare R2 S3 API endpoint |
+| `R2_BUCKET_NAME` | `<bucket name>` | Cloudflare R2 bucket name |
+| `R2_ACCESS_KEY_ID` | `<access key>` | Cloudflare R2 access key ID |
+| `R2_SECRET_ACCESS_KEY` | `<secret key>` | Cloudflare R2 secret access key |
 | `CORS_ORIGIN` | `http://localhost:5173` | Allowed frontend origin |
 
 ### 10.7 Logging
@@ -778,7 +781,7 @@ Deferred on purpose so V1 stays shippable:
 - Background job queue for ingestion
 - Multi-tenant workspaces and sharing
 - Evaluation automation and prompt versioning
-- Cloud object storage for files
+~~- Cloud object storage for files~~ *(brought forward to V1 using Cloudflare R2)*
 
 Microservices are not planned. If the codebase outgrows the simple layering, revisit the structure then.
 
