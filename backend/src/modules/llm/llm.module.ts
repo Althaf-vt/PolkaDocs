@@ -5,43 +5,43 @@ import { GeminiLlmProvider } from './gemini/gemini-llm.provider';
 import { GeminiEmbeddingProvider } from './gemini/gemini-embedding.provider';
 import { LLM_PROVIDER } from './interfaces/llm-provider.interface';
 import { EMBEDDING_PROVIDER } from './interfaces/embedding-provider.interface';
+import { LangChainLlmProvider } from './langchain/langchain-llm.provider';
+import { LangChainEmbeddingProvider } from './langchain/langchain-embedding.provider';
 
 @Module({
     providers: [
         GeminiClient,
         GeminiLlmProvider,
         GeminiEmbeddingProvider,
+        LangChainLlmProvider,
+        LangChainEmbeddingProvider,
         {
             provide: LLM_PROVIDER,
             useFactory: (
                 configService: ConfigService,
                 geminiProvider: GeminiLlmProvider,
+                langChainProvider: LangChainLlmProvider
             ) => {
                 const providerType = configService.get<string>('ai.provider');
-                // Defaults to Gemini provider on Day 1-2; LangChain provider binds here on Day 3
-                if (providerType === 'langchain') {
-                    throw new Error('LangChain LLM provider is scheduled for Day 3');
-                }
-                return geminiProvider;
+
+                return providerType === 'langchain' ? langChainProvider : geminiProvider;
             },
-            inject: [ConfigService, GeminiLlmProvider],
+            inject: [ConfigService, GeminiLlmProvider, LangChainLlmProvider],
         },
         {
             provide: EMBEDDING_PROVIDER,
             useFactory: (
                 configService: ConfigService,
                 geminiEmbeddingProvider: GeminiEmbeddingProvider,
+                langChainEmbeddingProvider: LangChainEmbeddingProvider,
             ) => {
                 const providerType = configService.get<string>('ai.provider');
-                // Defaults to Gemini embedding provider; LangChain embedding binds here on Day 3
-                if (providerType === 'langchain') {
-                    throw new Error('LangChain Embedding provider is scheduled for Day 3');
-                }
-                return geminiEmbeddingProvider;
+
+                return providerType === 'langchain' ? langChainEmbeddingProvider : geminiEmbeddingProvider;
             },
-            inject: [ConfigService, GeminiEmbeddingProvider],
+            inject: [ConfigService, GeminiEmbeddingProvider, LangChainEmbeddingProvider],
         },
     ],
-    exports: [LLM_PROVIDER, EMBEDDING_PROVIDER],
+    exports: [LLM_PROVIDER, EMBEDDING_PROVIDER, LangChainEmbeddingProvider],
 })
 export class LlmModule { }
