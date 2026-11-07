@@ -1,5 +1,5 @@
 # Stage 1: Build dependencies and compile TypeScript
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /usr/src/app
 
@@ -15,7 +15,7 @@ RUN npm run build
 RUN npm prune --production
 
 # Stage 2: Minimal production runtime
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /usr/src/app
 
