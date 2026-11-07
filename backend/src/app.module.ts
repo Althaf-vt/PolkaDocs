@@ -8,6 +8,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { LlmModule } from './modules/llm/llm.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { ObservabilityModule } from './modules/observability/observability.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ChatModule } from './modules/chat/chat.module';
     LlmModule,
     DocumentsModule,
     ChatModule,
+    ObservabilityModule,
   ],
 })
 export class AppModule { }
