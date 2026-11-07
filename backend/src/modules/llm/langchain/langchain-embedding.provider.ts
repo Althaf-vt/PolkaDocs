@@ -14,7 +14,8 @@ export class LangChainEmbeddingProvider implements EmbeddingProvider {
 
     constructor(private readonly configService: ConfigService) {
         const apiKey = this.configService.get<string>('ai.geminiApiKey');
-        const model = this.configService.get<string>('ai.embeddingModel') || 'text-embedding-004';
+        const model = this.configService.get<string>('ai.embeddingModel') || 'gemini-embedding-001';
+        const dimensions = this.configService.get<number>('ai.embeddingDimensions') || 768;
 
         if (!apiKey) {
             throw new Error('GEMINI_API_KEY is not defined in application configuration');
@@ -24,6 +25,7 @@ export class LangChainEmbeddingProvider implements EmbeddingProvider {
             apiKey,
             model,
             taskType: TaskType.RETRIEVAL_DOCUMENT,
+            outputDimensionality: dimensions,
         });
     }
 
