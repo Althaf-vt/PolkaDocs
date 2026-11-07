@@ -13,6 +13,7 @@ import { DocumentChunkRepository } from './repositories/document-chunk.repositor
 import { PgvectorRetriever } from './retrieval/pgvector.retriever';
 import { RETRIEVER } from './retrieval/retriever.interface';
 import { LlmModule } from '../llm/llm.module';
+import { LangChainRetriever } from './retrieval/langchain.retriever';
 
 @Module({
     imports: [
@@ -28,20 +29,19 @@ import { LlmModule } from '../llm/llm.module';
         FileStorageService,
         DocumentChunkRepository,
         PgvectorRetriever,
+        LangChainRetriever,
         {
             provide: RETRIEVER,
             useFactory: (
                 configService: ConfigService,
                 pgvectorRetriever: PgvectorRetriever,
+                LangChainRetriever: LangChainRetriever,
             ) => {
                 const providerType = configService.get<string>('ai.provider');
-                // Defaults to raw pgvector retriever; LangChain retriever binds here on Day 3
-                if (providerType === 'langchain') {
-                    throw new Error('LangChain Retriever is scheduled for Day 3');
-                }
-                return pgvectorRetriever;
+
+                return providerType === 'langchain' ? LangChainRetriever : pgvectorRetriever;
             },
-            inject: [ConfigService, PgvectorRetriever],
+            inject: [ConfigService, PgvectorRetriever, LangChainRetriever],
         },
     ],
     exports: [DocumentsService, RETRIEVER, DocumentChunkRepository],
