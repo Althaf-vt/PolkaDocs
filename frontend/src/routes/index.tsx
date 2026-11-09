@@ -4,9 +4,9 @@ import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { RegisterPage } from '../features/auth/pages/RegisterPage';
 import { DocumentsPage } from '../features/documents/pages/DocumentsPage';
+import { ChatPage } from '../features/chat/Pages/ChatPage';
 import { ProtectedRoute, PublicRoute } from './guards';
 
-// Central application route definitions
 export const router = createBrowserRouter([
     {
         path: '/',
@@ -31,15 +31,7 @@ export const router = createBrowserRouter([
         ),
         children: [
             { path: 'documents', element: <DocumentsPage /> },
-            {
-                path: 'chat',
-                // Placeholder until Branch 2 wires the chat interface
-                element: (
-                    <div className="text-slate-400">
-                        Chat Assistant interface will be activated in Branch 2.
-                    </div>
-                ),
-            },
+            { path: 'chat', element: <ChatPage /> },
         ],
     },
 ]);

@@ -1,0 +1,127 @@
+import { useState } from 'react';
+import { Plus, MessageSquare, Trash2, Edit2, Check, X } from 'lucide-react';
+import type { ConversationItem } from '../../../types/chat.types';
+import { cn } from '../../../lib/utils';
+
+interface ConversationSidebarProps {
+    conversations: ConversationItem[];
+    activeConversationId: string | null;
+    onSelectConversation: (id: string) => void;
+    onCreateConversation: () => void;
+    onUpdateTitle: (id: string, newTitle: string) => void;
+    onDeleteConversation: (id: string) => void;
+}
+
+export function ConversationSidebar({
+    conversations,
+    activeConversationId,
+    onSelectConversation,
+    onCreateConversation,
+    onUpdateTitle,
+    onDeleteConversation,
+}: ConversationSidebarProps) {
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editTitle, setEditTitle] = useState('');
+
+    const handleStartEdit = (conv: ConversationItem) => {
+        setEditingId(conv.id);
+        setEditTitle(conv.title || 'Conversation');
+    };
+
+    const handleSaveEdit = (id: string) => {
+        if (editTitle.trim()) {
+            onUpdateTitle(id, editTitle.trim());
+        }
+        setEditingId(null);
+    };
+
+    return (
+        <aside className="flex h-full w-72 flex-col border-r border-slate-800 bg-slate-900/60 backdrop-blur-md">
+            <div className="p-4 border-b border-slate-800">
+                <button
+                    onClick={onCreateConversation}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition cursor-pointer shadow-sm"
+                >
+                    <Plus className="h-4 w-4" />
+                    <span>New Chat</span>
+                </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3 space-y-1">
+                {conversations.length === 0 ? (
+                    <p className="p-4 text-center text-xs text-slate-500">No previous conversations.</p>
+                ) : (
+                    conversations.map((conv) => {
+                        const isActive = conv.id === activeConversationId;
+                        const isEditing = conv.id === editingId;
+
+                        return (
+                            <div
+                                key={conv.id}
+                                onClick={() => !isEditing && onSelectConversation(conv.id)}
+                                className={cn(
+                                    'group flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium transition cursor-pointer',
+                                    isActive
+                                        ? 'bg-slate-800 text-white border border-slate-700/60'
+                                        : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200',
+                                )}
+                            >
+                                {isEditing ? (
+                                    <div className="flex flex-1 items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                        <input
+                                            type="text"
+                                            value={editTitle}
+                                            onChange={(e) => setEditTitle(e.target.value)}
+                                            className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-white focus:outline-none"
+                                            autoFocus
+                                        />
+                                        <button
+                                            onClick={() => handleSaveEdit(conv.id)}
+                                            className="p-1 text-emerald-400 hover:text-emerald-300"
+                                        >
+                                            <Check className="h-3.5 w-3.5" />
+                                        </button>
+                                        <button
+                                            onClick={() => setEditingId(null)}
+                                            className="p-1 text-slate-400 hover:text-slate-300"
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center gap-2 truncate">
+                                            <MessageSquare className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                                            <span className="truncate">{conv.title || 'Untitled Conversation'}</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleStartEdit(conv);
+                                                }}
+                                                className="p-1 text-slate-400 hover:text-slate-200"
+                                            >
+                                                <Edit2 className="h-3 w-3" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onDeleteConversation(conv.id);
+                                                }}
+                                                className="p-1 text-slate-400 hover:text-rose-400"
+                                            >
+                                                <Trash2 className="h-3 w-3" />
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })
+                )}
+            </div>
+        </aside>
+    );
+}
