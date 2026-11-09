@@ -39,7 +39,7 @@ export class AuthService {
             registerDto.name,
         );
 
-        return this.generateTokenPair(user.id, user.email);
+        return this.generateTokenPair(user.id, user.email, user.name);
     }
 
     async login(loginDto: LoginDto): Promise<AuthTokens> {
@@ -64,7 +64,7 @@ export class AuthService {
             );
         }
 
-        return this.generateTokenPair(user.id, user.email);
+        return this.generateTokenPair(user.id, user.email, user.name);
     }
 
     async refresh(refreshTokenRaw: string): Promise<AuthTokens> {
@@ -112,7 +112,8 @@ export class AuthService {
         matchedTokenRecord.revokedAt = new Date();
         await this.refreshTokenRepository.save(matchedTokenRecord);
 
-        return this.generateTokenPair(payload.sub, payload.email);
+        const user = await this.usersService.findById(payload.sub);
+        return this.generateTokenPair(user.id, user.email, user.name);
     }
 
     async logout(refreshTokenRaw: string): Promise<void> {
@@ -144,7 +145,11 @@ export class AuthService {
         }
     }
 
-    private async generateTokenPair(userId: string, email: string): Promise<AuthTokens> {
+    private async generateTokenPair(
+        userId: string,
+        email: string,
+        name: string | null = null,
+    ): Promise<AuthTokens> {
         const accessSecret = this.configService.get<string>('jwt.accessSecret');
         const refreshSecret = this.configService.get<string>('jwt.refreshSecret');
         const accessTtl = this.configService.get<string>('jwt.accessTtl');
@@ -178,6 +183,14 @@ export class AuthService {
         });
         await this.refreshTokenRepository.save(tokenRecord);
 
-        return { accessToken, refreshToken };
+        return {
+            accessToken,
+            refreshToken,
+            user: {
+                id: userId,
+                email,
+                name,
+            },
+        };
     }
 }
