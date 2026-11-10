@@ -14,8 +14,8 @@ export function ProtectedRoute({ children }: GuardProps) {
 
     if (!isInitialized) {
         return (
-            <div className="flex h-screen w-screen items-center justify-center bg-slate-950 text-slate-100">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+            <div className="flex h-screen w-screen items-center justify-center bg-[#F3F5F7] text-[#121921]">
+                <Loader2 className="h-8 w-8 animate-spin text-[#8C221A]" />
             </div>
         );
     }
@@ -33,8 +33,8 @@ export function PublicRoute({ children }: GuardProps) {
 
     if (!isInitialized) {
         return (
-            <div className="flex h-screen w-screen items-center justify-center bg-slate-950 text-slate-100">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+            <div className="flex h-screen w-screen items-center justify-center bg-[#F3F5F7] text-[#121921]">
+                <Loader2 className="h-8 w-8 animate-spin text-[#8C221A]" />
             </div>
         );
     }
