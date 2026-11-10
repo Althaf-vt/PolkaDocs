@@ -48,61 +48,61 @@ export function RegisterPage() {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
-            <h2 className="text-xl font-semibold text-white">Create a PolkaDocs account</h2>
+            <h2 className="text-xl font-bold tracking-tight text-[#121921]">Create a PolkaDocs account</h2>
 
             {error && (
-                <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-400">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
                     {error}
                 </div>
             )}
 
             <div>
-                <label className="block text-xs font-medium text-slate-300">Email address</label>
+                <label className="block text-xs font-semibold text-[#34424F]">Email address</label>
                 <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="mt-1.5 block w-full rounded-lg border border-[#D5DBE2] bg-white px-3.5 py-2.5 text-sm text-[#121921] placeholder-[#96A3B2] transition focus:border-[#8C221A] focus:outline-none focus:ring-2 focus:ring-[#8C221A]/15"
                 />
             </div>
 
             <div>
-                <label className="block text-xs font-medium text-slate-300">Password</label>
+                <label className="block text-xs font-semibold text-[#34424F]">Password</label>
                 <input
                     type="password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Min 8 characters"
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="mt-1.5 block w-full rounded-lg border border-[#D5DBE2] bg-white px-3.5 py-2.5 text-sm text-[#121921] placeholder-[#96A3B2] transition focus:border-[#8C221A] focus:outline-none focus:ring-2 focus:ring-[#8C221A]/15"
                 />
             </div>
 
             <div>
-                <label className="block text-xs font-medium text-slate-300">Confirm password</label>
+                <label className="block text-xs font-semibold text-[#34424F]">Confirm password</label>
                 <input
                     type="password"
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="mt-1.5 block w-full rounded-lg border border-[#D5DBE2] bg-white px-3.5 py-2.5 text-sm text-[#121921] placeholder-[#96A3B2] transition focus:border-[#8C221A] focus:outline-none focus:ring-2 focus:ring-[#8C221A]/15"
                 />
             </div>
 
             <button
                 type="submit"
                 disabled={isLoading}
-                className="flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-50"
+                className="flex w-full items-center justify-center rounded-lg bg-[#8C221A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#731A13] focus:outline-none focus:ring-2 focus:ring-[#8C221A]/20 disabled:opacity-50 cursor-pointer"
             >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Register'}
             </button>
 
-            <p className="text-center text-xs text-slate-400">
+            <p className="text-center text-xs text-[#67788A]">
                 Already registered?{' '}
-                <Link to="/login" className="font-medium text-indigo-400 hover:text-indigo-300">
+                <Link to="/login" className="font-semibold text-[#8C221A] hover:underline">
                     Sign in
                 </Link>
             </p>
