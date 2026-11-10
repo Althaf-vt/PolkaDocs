@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent } from 
 import { Send, Square, Files, X } from 'lucide-react';
 import type { DocumentItem } from '../../../types/document.types';
 import { cn } from '../../../lib/utils';
+import { Magnet } from '@/components/ui/magnet';
 
 interface ChatInputProps {
     onSendMessage: (content: string, documentIds?: string[]) => void;
@@ -159,44 +160,50 @@ export function ChatInput({
                     />
 
                     <div className="absolute right-3 flex items-center gap-2">
-                        <button
-                            ref={buttonRef}
-                            type="button"
-                            onClick={() => setShowFilterDropdown((prev) => !prev)}
-                            title="Scope search to specific documents"
-                            className={cn(
-                                'flex items-center gap-1.5 rounded-lg p-2 text-xs font-semibold transition cursor-pointer',
-                                selectedDocIds.length > 0 || showFilterDropdown
-                                    ? 'bg-[#F4EAEB] text-[#8C221A] border border-[#8C221A]/30 shadow-xs'
-                                    : 'text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#121921]',
-                            )}
-                        >
-                            <Files className="h-4 w-4" />
-                            {selectedDocIds.length > 0 && (
-                                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#8C221A] px-1 text-[10px] font-bold text-white">
-                                    {selectedDocIds.length}
-                                </span>
-                            )}
-                        </button>
+                        <Magnet padding={25} magnetStrength={2} maxOffset={4}>
+                            <button
+                                ref={buttonRef}
+                                type="button"
+                                onClick={() => setShowFilterDropdown((prev) => !prev)}
+                                title="Scope search to specific documents"
+                                className={cn(
+                                    'btn-tactile-secondary flex items-center gap-1.5 rounded-lg p-2 text-xs font-semibold cursor-pointer',
+                                    selectedDocIds.length > 0 || showFilterDropdown
+                                        ? 'bg-[#F4EAEB] text-[#8C221A] border border-[#8C221A]/30 shadow-xs'
+                                        : 'text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#121921]',
+                                )}
+                            >
+                                <Files className="h-4 w-4" />
+                                {selectedDocIds.length > 0 && (
+                                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#8C221A] px-1 text-[10px] font-bold text-white">
+                                        {selectedDocIds.length}
+                                    </span>
+                                )}
+                            </button>
+                        </Magnet>
 
                         {isStreaming ? (
-                            <button
-                                type="button"
-                                onClick={onStopStreaming}
-                                title="Stop generation"
-                                className="rounded-lg bg-rose-600 p-2 text-white hover:bg-rose-500 transition cursor-pointer"
-                            >
-                                <Square className="h-4 w-4 fill-current" />
-                            </button>
+                            <Magnet padding={25} magnetStrength={2} maxOffset={4}>
+                                <button
+                                    type="button"
+                                    onClick={onStopStreaming}
+                                    title="Stop generation"
+                                    className="btn-tactile rounded-lg bg-rose-600 p-2 text-white hover:bg-rose-500 cursor-pointer shadow-xs"
+                                >
+                                    <Square className="h-4 w-4 fill-current" />
+                                </button>
+                            </Magnet>
                         ) : (
-                            <button
-                                type="submit"
-                                disabled={!content.trim()}
-                                title="Send question"
-                                className="rounded-lg bg-[#8C221A] p-2 text-white hover:bg-[#731A13] transition disabled:opacity-40 cursor-pointer shadow-xs"
-                            >
-                                <Send className="h-4 w-4" />
-                            </button>
+                            <Magnet padding={30} magnetStrength={2.5} maxOffset={5} disabled={!content.trim()}>
+                                <button
+                                    type="submit"
+                                    disabled={!content.trim()}
+                                    title="Send question"
+                                    className="btn-tactile rounded-lg bg-[#8C221A] p-2 text-white hover:bg-[#731A13] disabled:opacity-40 cursor-pointer shadow-xs disabled:pointer-events-none"
+                                >
+                                    <Send className="h-4 w-4" />
+                                </button>
+                            </Magnet>
                         )}
                     </div>
                 </div>

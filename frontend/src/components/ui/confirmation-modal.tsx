@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { Magnet } from '@/components/ui/magnet';
 
 export interface ConfirmationModalProps {
     isOpen: boolean;
@@ -96,24 +97,26 @@ export function ConfirmationModal({
                         type="button"
                         onClick={onCancel}
                         disabled={isLoading}
-                        className="rounded-xl border border-[#D5DBE2] bg-white px-4 py-2 text-xs font-semibold text-[#34424F] hover:bg-[#EAEEF2] hover:text-[#121921] transition shadow-xs cursor-pointer disabled:opacity-40"
+                        className="btn-tactile-secondary rounded-xl border border-[#D5DBE2] bg-white px-4 py-2 text-xs font-semibold text-[#34424F] hover:bg-[#EAEEF2] hover:text-[#121921] shadow-xs cursor-pointer disabled:opacity-40"
                     >
                         {cancelText}
                     </button>
-                    <button
-                        type="button"
-                        onClick={onConfirm}
-                        disabled={isLoading}
-                        className={cn(
-                            'flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold text-white shadow-xs transition cursor-pointer disabled:opacity-50 active:scale-[0.99]',
-                            isDanger
-                                ? 'bg-red-600 hover:bg-red-700'
-                                : 'bg-[#8C221A] hover:bg-[#731A13]',
-                        )}
-                    >
-                        {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                        <span>{confirmText}</span>
-                    </button>
+                    <Magnet padding={30} magnetStrength={2} maxOffset={4} disabled={isLoading}>
+                        <button
+                            type="button"
+                            onClick={onConfirm}
+                            disabled={isLoading}
+                            className={cn(
+                                'btn-tactile flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold text-white shadow-xs cursor-pointer disabled:opacity-50',
+                                isDanger
+                                    ? 'bg-red-600 hover:bg-red-700'
+                                    : 'bg-[#8C221A] hover:bg-[#731A13]',
+                            )}
+                        >
+                            {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                            <span>{confirmText}</span>
+                        </button>
+                    </Magnet>
                 </div>
             </div>
         </div>

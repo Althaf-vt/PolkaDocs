@@ -126,14 +126,14 @@ export function DocumentTable({ documents, onReprocess, onDelete }: DocumentTabl
                                         <button
                                             onClick={() => setPendingAction({ type: 'reprocess', document: doc })}
                                             title="Reprocess document"
-                                            className="rounded-lg p-1.5 text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#121921] transition cursor-pointer"
+                                            className="btn-tactile-secondary rounded-lg p-1.5 text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#121921] cursor-pointer"
                                         >
                                             <RotateCw className="h-4 w-4" />
                                         </button>
                                         <button
                                             onClick={() => setPendingAction({ type: 'delete', document: doc })}
                                             title="Delete document"
-                                            className="rounded-lg p-1.5 text-[#67788A] hover:bg-red-50 hover:text-red-700 transition cursor-pointer"
+                                            className="btn-tactile-secondary rounded-lg p-1.5 text-[#67788A] hover:bg-red-50 hover:text-red-700 cursor-pointer"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </button>

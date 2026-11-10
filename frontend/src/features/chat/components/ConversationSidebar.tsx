@@ -3,6 +3,7 @@ import { Plus, MessageSquare, Trash2, Edit2, Check, X } from 'lucide-react';
 import type { ConversationItem } from '../../../types/chat.types';
 import { cn } from '../../../lib/utils';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
+import { Magnet } from '@/components/ui/magnet';
 
 interface ConversationSidebarProps {
     conversations: ConversationItem[];
@@ -47,13 +48,15 @@ export function ConversationSidebar({
     return (
         <aside className="flex h-full w-72 flex-col border-r border-[#D5DBE2] bg-[#F8FAFC]">
             <div className="p-4 border-b border-[#D5DBE2]">
-                <button
-                    onClick={onCreateConversation}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#8C221A] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#731A13] transition cursor-pointer shadow-xs active:scale-[0.99]"
-                >
-                    <Plus className="h-4 w-4" />
-                    <span>New Chat</span>
-                </button>
+                <Magnet padding={45} magnetStrength={2.5} maxOffset={6} wrapperClassName="w-full" innerClassName="w-full">
+                    <button
+                        onClick={onCreateConversation}
+                        className="btn-tactile flex w-full items-center justify-center gap-2 rounded-xl bg-[#8C221A] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#731A13] cursor-pointer shadow-xs"
+                    >
+                        <Plus className="h-4 w-4" />
+                        <span>New Chat</span>
+                    </button>
+                </Magnet>
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-1">

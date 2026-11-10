@@ -4,6 +4,7 @@ import { useAuthStore } from '../../stores/auth.store';
 import { authApi } from '../../api/auth.api';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
 import { cn } from '../../lib/utils';
+import { Magnet } from '@/components/ui/magnet';
 import polkadocsLogo from '../../assets/polkadocs-logo.svg';
 
 export function DashboardLayout() {
@@ -68,19 +69,21 @@ export function DashboardLayout() {
 
                     <div className="flex items-center gap-3">
                         {canInstall && (
-                            <button
-                                onClick={triggerInstall}
-                                title="Install PolkaDocs as desktop or mobile app"
-                                className="flex items-center gap-1.5 rounded-lg border border-[#8C221A]/20 bg-[#F4EAEB] px-2.5 py-1.5 text-xs font-semibold text-[#8C221A] hover:bg-[#EADCE0] transition-colors shadow-xs cursor-pointer animate-in fade-in"
-                            >
-                                <Download className="h-3.5 w-3.5" />
-                                <span className="hidden sm:inline-block">Install App</span>
-                            </button>
+                            <Magnet padding={30} magnetStrength={2} maxOffset={4}>
+                                <button
+                                    onClick={triggerInstall}
+                                    title="Install PolkaDocs as desktop or mobile app"
+                                    className="btn-tactile-secondary flex items-center gap-1.5 rounded-lg border border-[#8C221A]/30 bg-[#F4EAEB] px-2.5 py-1.5 text-xs font-semibold text-[#8C221A] hover:bg-[#EADCE0] shadow-xs cursor-pointer animate-in fade-in"
+                                >
+                                    <Download className="h-3.5 w-3.5" />
+                                    <span className="hidden sm:inline-block">Install App</span>
+                                </button>
+                            </Magnet>
                         )}
                         <Link
                             to="/profile"
                             title="View Profile"
-                            className="flex items-center gap-2 rounded-lg border border-[#D5DBE2] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#34424F] hover:bg-[#EAEEF2] hover:text-[#121921] hover:border-[#8C221A]/30 transition-colors shadow-xs"
+                            className="btn-tactile-secondary flex items-center gap-2 rounded-lg border border-[#D5DBE2] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#34424F] hover:bg-[#EAEEF2] hover:text-[#121921] hover:border-[#8C221A]/30 shadow-xs"
                         >
                             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#F4EAEB] text-[#8C221A] text-[10px] font-bold">
                                 {userInitial}
@@ -91,7 +94,7 @@ export function DashboardLayout() {
                         </Link>
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-1.5 rounded-lg border border-[#D5DBE2] bg-white px-3 py-1.5 text-xs font-semibold text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#8C221A] transition-colors shadow-xs cursor-pointer"
+                            className="btn-tactile-secondary flex items-center gap-1.5 rounded-lg border border-[#D5DBE2] bg-white px-3 py-1.5 text-xs font-semibold text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#8C221A] shadow-xs cursor-pointer"
                         >
                             <LogOut className="h-3.5 w-3.5" />
                             Logout
