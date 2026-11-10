@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { DocumentItem, DocumentStatus } from '../../../types/document.types';
 import { formatBytes, formatDate } from '../../../lib/utils';
 import {
@@ -9,6 +10,7 @@ import {
     AlertTriangle,
     Loader2,
 } from 'lucide-react';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 
 interface DocumentTableProps {
     documents: DocumentItem[];
@@ -49,6 +51,29 @@ function StatusBadge({ status }: { status: DocumentStatus }) {
 
 // Data table listing ingested documents and lifecycle controls
 export function DocumentTable({ documents, onReprocess, onDelete }: DocumentTableProps) {
+    const [pendingAction, setPendingAction] = useState<{
+        type: 'reprocess' | 'delete';
+        document: DocumentItem;
+    } | null>(null);
+    const [isActionLoading, setIsActionLoading] = useState(false);
+
+    const handleConfirm = async () => {
+        if (!pendingAction) return;
+        setIsActionLoading(true);
+        try {
+            if (pendingAction.type === 'delete') {
+                await onDelete(pendingAction.document.id);
+            } else {
+                await onReprocess(pendingAction.document.id);
+            }
+            setPendingAction(null);
+        } catch {
+            // Error handling handled by caller mutation
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
     if (documents.length === 0) {
         return (
             <div className="rounded-2xl border border-[#D5DBE2] bg-white p-12 text-center text-[#67788A] shadow-xs">
@@ -99,14 +124,14 @@ export function DocumentTable({ documents, onReprocess, onDelete }: DocumentTabl
                                 <td className="px-6 py-4 text-right">
                                     <div className="flex items-center justify-end gap-1.5">
                                         <button
-                                            onClick={() => onReprocess(doc.id)}
+                                            onClick={() => setPendingAction({ type: 'reprocess', document: doc })}
                                             title="Reprocess document"
                                             className="rounded-lg p-1.5 text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#121921] transition cursor-pointer"
                                         >
                                             <RotateCw className="h-4 w-4" />
                                         </button>
                                         <button
-                                            onClick={() => onDelete(doc.id)}
+                                            onClick={() => setPendingAction({ type: 'delete', document: doc })}
                                             title="Delete document"
                                             className="rounded-lg p-1.5 text-[#67788A] hover:bg-red-50 hover:text-red-700 transition cursor-pointer"
                                         >
@@ -119,6 +144,39 @@ export function DocumentTable({ documents, onReprocess, onDelete }: DocumentTabl
                     </tbody>
                 </table>
             </div>
+
+            <ConfirmationModal
+                isOpen={pendingAction !== null}
+                title={
+                    pendingAction?.type === 'delete'
+                        ? 'Delete Document'
+                        : 'Reprocess Document'
+                }
+                description={
+                    pendingAction?.type === 'delete' ? (
+                        <span>
+                            Are you sure you want to delete <strong className="text-[#121921] font-semibold">{pendingAction.document.fileName}</strong>? This will permanently remove the document, its parsed chunks, and all vector embeddings from the search index. This action cannot be undone.
+                        </span>
+                    ) : (
+                        <span>
+                            Are you sure you want to reprocess <strong className="text-[#121921] font-semibold">{pendingAction?.document.fileName}</strong>? This will clear existing chunks and re-run parsing, extraction, and vector embedding generation.
+                        </span>
+                    )
+                }
+                confirmText={pendingAction?.type === 'delete' ? 'Delete Document' : 'Reprocess'}
+                cancelText="Cancel"
+                variant={pendingAction?.type === 'delete' ? 'danger' : 'primary'}
+                icon={
+                    pendingAction?.type === 'delete' ? (
+                        <Trash2 className="h-5 w-5" />
+                    ) : (
+                        <RotateCw className="h-5 w-5" />
+                    )
+                }
+                isLoading={isActionLoading}
+                onConfirm={handleConfirm}
+                onCancel={() => !isActionLoading && setPendingAction(null)}
+            />
         </div>
     );
 }
