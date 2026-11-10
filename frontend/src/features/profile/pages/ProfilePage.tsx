@@ -2,6 +2,7 @@ import { useState, type FormEvent, useEffect } from 'react';
 import { useAuthStore } from '../../../stores/auth.store';
 import { usersApi } from '../../../api/users.api';
 import { formatDate } from '../../../lib/utils';
+import { Magnet } from '@/components/ui/magnet';
 import {
     User as UserIcon,
     Mail,
@@ -193,27 +194,29 @@ export function ProfilePage() {
                                         type="button"
                                         disabled={isSaving}
                                         onClick={() => setName(user?.name || '')}
-                                        className="rounded-xl border border-[#D5DBE2] bg-white px-4 py-2.5 text-sm font-semibold text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#121921] transition shadow-xs cursor-pointer disabled:opacity-50"
+                                        className="btn-tactile-secondary rounded-xl border border-[#D5DBE2] bg-white px-4 py-2.5 text-sm font-semibold text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#121921] shadow-xs cursor-pointer disabled:opacity-50"
                                     >
                                         Cancel
                                     </button>
-                                    <button
-                                        type="submit"
-                                        disabled={isSaving}
-                                        className="flex items-center gap-2 rounded-xl bg-[#8C221A] px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-[#731A13] focus:outline-none focus:ring-2 focus:ring-[#8C221A] focus:ring-offset-2 transition cursor-pointer disabled:opacity-50 active:scale-[0.99]"
-                                    >
-                                        {isSaving ? (
-                                            <>
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                <span>Saving Changes...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Save className="h-4 w-4" />
-                                                <span>Save Changes</span>
-                                            </>
-                                        )}
-                                    </button>
+                                    <Magnet padding={35} magnetStrength={2.5} maxOffset={5} disabled={isSaving}>
+                                        <button
+                                            type="submit"
+                                            disabled={isSaving}
+                                            className="btn-tactile flex items-center gap-2 rounded-xl bg-[#8C221A] px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-[#731A13] focus:outline-none focus:ring-2 focus:ring-[#8C221A] focus:ring-offset-2 cursor-pointer disabled:opacity-50"
+                                        >
+                                            {isSaving ? (
+                                                <>
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    <span>Saving Changes...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Save className="h-4 w-4" />
+                                                    <span>Save Changes</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </Magnet>
                                 </div>
                             )}
                         </form>

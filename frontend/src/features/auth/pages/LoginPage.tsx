@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { authApi } from '../../../api/auth.api';
 import { useAuthStore } from '../../../stores/auth.store';
+import { Magnet } from '@/components/ui/magnet';
 
 export function LoginPage() {
     const [email, setEmail] = useState('');
@@ -67,13 +68,15 @@ export function LoginPage() {
                 />
             </div>
 
-            <button
-                type="submit"
-                disabled={isLoading}
-                className="flex w-full items-center justify-center rounded-lg bg-[#8C221A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#731A13] focus:outline-none focus:ring-2 focus:ring-[#8C221A]/20 disabled:opacity-50 cursor-pointer"
-            >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in'}
-            </button>
+            <Magnet padding={45} magnetStrength={2.5} maxOffset={6} wrapperClassName="w-full" innerClassName="w-full" disabled={isLoading}>
+                <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="btn-tactile flex w-full items-center justify-center rounded-lg bg-[#8C221A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#731A13] focus:outline-none focus:ring-2 focus:ring-[#8C221A]/20 disabled:opacity-50 cursor-pointer"
+                >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in'}
+                </button>
+            </Magnet>
 
             <p className="text-center text-xs text-[#67788A]">
                 Don&apos;t have an account?{' '}
