@@ -1,11 +1,16 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @theme {
   --color-canvas: #F3F5F7;
   --color-surface: #FFFFFF;
   --color-surface-hover: #EAEEF2;
   --color-surface-elevated: #FFFFFF;
-  
+
+  --color-background: #F3F5F7;
+  --color-primary: #8C221A;
+  --color-primary-foreground: #FFFFFF;
+
   --color-border-subtle: #E5E9EE;
   --color-border-medium: #D5DBE2;
   --color-border-strong: #BAC3CE;
@@ -23,6 +28,44 @@
   --color-text-body: #34424F;
   --color-text-muted: #67788A;
   --color-text-subtle: #96A3B2;
+}
+
+:root {
+  --bowman-accent: #8C221A;
+  --bowman-accent-glow: rgba(140, 34, 26, 0.15);
+  --bowman-pulse-outline: rgba(140, 34, 26, 0.35);
+}
+
+@keyframes bowman-fade-dot {
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes bowman-pulse-subtle {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(140, 34, 26, 0);
+    outline: 2px solid transparent;
+    outline-offset: -1px;
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px var(--bowman-accent-glow, rgba(140, 34, 26, 0.15));
+    outline: 2px solid var(--bowman-pulse-outline, rgba(140, 34, 26, 0.35));
+    outline-offset: -1px;
+  }
+}
+
+.bowman-pulse-subtle {
+  animation: bowman-pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 body {
