@@ -36,11 +36,11 @@ export function ConversationSidebar({
     };
 
     return (
-        <aside className="flex h-full w-72 flex-col border-r border-slate-800 bg-slate-900/60 backdrop-blur-md">
-            <div className="p-4 border-b border-slate-800">
+        <aside className="flex h-full w-72 flex-col border-r border-[#D5DBE2] bg-[#F8FAFC]">
+            <div className="p-4 border-b border-[#D5DBE2]">
                 <button
                     onClick={onCreateConversation}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition cursor-pointer shadow-sm"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#8C221A] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#731A13] transition cursor-pointer shadow-xs active:scale-[0.99]"
                 >
                     <Plus className="h-4 w-4" />
                     <span>New Chat</span>
@@ -49,7 +49,7 @@ export function ConversationSidebar({
 
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
                 {conversations.length === 0 ? (
-                    <p className="p-4 text-center text-xs text-slate-500">No previous conversations.</p>
+                    <p className="p-4 text-center text-xs text-[#67788A]">No previous conversations.</p>
                 ) : (
                     conversations.map((conv) => {
                         const isActive = conv.id === activeConversationId;
@@ -62,8 +62,8 @@ export function ConversationSidebar({
                                 className={cn(
                                     'group flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium transition cursor-pointer',
                                     isActive
-                                        ? 'bg-slate-800 text-white border border-slate-700/60'
-                                        : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200',
+                                        ? 'bg-[#F4EAEB] text-[#8C221A] font-semibold border border-[#8C221A]/20 shadow-xs'
+                                        : 'text-[#34424F] hover:bg-[#EAEEF2] hover:text-[#121921] border border-transparent',
                                 )}
                             >
                                 {isEditing ? (
@@ -72,18 +72,18 @@ export function ConversationSidebar({
                                             type="text"
                                             value={editTitle}
                                             onChange={(e) => setEditTitle(e.target.value)}
-                                            className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-white focus:outline-none"
+                                            className="w-full rounded border border-[#D5DBE2] bg-white px-2 py-1 text-xs text-[#121921] focus:outline-none focus:border-[#8C221A]"
                                             autoFocus
                                         />
                                         <button
                                             onClick={() => handleSaveEdit(conv.id)}
-                                            className="p-1 text-emerald-400 hover:text-emerald-300"
+                                            className="p-1 text-emerald-600 hover:text-emerald-700"
                                         >
                                             <Check className="h-3.5 w-3.5" />
                                         </button>
                                         <button
                                             onClick={() => setEditingId(null)}
-                                            className="p-1 text-slate-400 hover:text-slate-300"
+                                            className="p-1 text-[#67788A] hover:text-[#121921]"
                                         >
                                             <X className="h-3.5 w-3.5" />
                                         </button>
@@ -91,7 +91,7 @@ export function ConversationSidebar({
                                 ) : (
                                     <>
                                         <div className="flex items-center gap-2 truncate">
-                                            <MessageSquare className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                                            <MessageSquare className={cn("h-3.5 w-3.5 shrink-0", isActive ? "text-[#8C221A]" : "text-[#67788A]")} />
                                             <span className="truncate">{conv.title || 'Untitled Conversation'}</span>
                                         </div>
 
@@ -101,7 +101,7 @@ export function ConversationSidebar({
                                                     e.stopPropagation();
                                                     handleStartEdit(conv);
                                                 }}
-                                                className="p-1 text-slate-400 hover:text-slate-200"
+                                                className="p-1 text-[#67788A] hover:text-[#8C221A]"
                                             >
                                                 <Edit2 className="h-3 w-3" />
                                             </button>
@@ -110,7 +110,7 @@ export function ConversationSidebar({
                                                     e.stopPropagation();
                                                     onDeleteConversation(conv.id);
                                                 }}
-                                                className="p-1 text-slate-400 hover:text-rose-400"
+                                                className="p-1 text-[#67788A] hover:text-rose-600"
                                             >
                                                 <Trash2 className="h-3 w-3" />
                                             </button>
