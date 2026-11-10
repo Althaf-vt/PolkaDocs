@@ -74,9 +74,9 @@ export function FileUploadZone({ onUploadSuccess }: FileUploadZoneProps) {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition cursor-pointer ${isDragging
-                    ? 'border-indigo-500 bg-indigo-500/10'
-                    : 'border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-900/80'
+                className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition cursor-pointer shadow-xs ${isDragging
+                    ? 'border-[#8C221A] bg-[#F4EAEB]'
+                    : 'border-[#D5DBE2] bg-white hover:border-[#8C221A] hover:bg-[#F4EAEB]/30'
                     }`}
             >
                 <input
@@ -87,23 +87,25 @@ export function FileUploadZone({ onUploadSuccess }: FileUploadZoneProps) {
                     className="hidden"
                 />
                 {isUploading ? (
-                    <div className="flex flex-col items-center space-y-2 text-indigo-400">
+                    <div className="flex flex-col items-center space-y-2 text-[#8C221A]">
                         <Loader2 className="h-8 w-8 animate-spin" />
-                        <span className="text-sm font-medium">Uploading and scheduling ingestion...</span>
+                        <span className="text-sm font-semibold">Uploading and scheduling ingestion...</span>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center space-y-2 text-slate-400">
-                        <UploadCloud className="h-8 w-8 text-slate-500" />
-                        <div>
-                            <span className="font-semibold text-indigo-400">Click to upload</span> or drag and drop
+                    <div className="flex flex-col items-center space-y-2.5">
+                        <div className="rounded-full bg-[#F4EAEB] p-3 text-[#8C221A]">
+                            <UploadCloud className="h-6 w-6" />
                         </div>
-                        <p className="text-xs text-slate-500">PDF, DOCX, TXT, or MD (Max 10 MB)</p>
+                        <div className="text-sm text-[#34424F]">
+                            <span className="font-bold text-[#8C221A] hover:underline">Click to upload</span> or drag and drop
+                        </div>
+                        <p className="text-xs font-medium text-[#67788A]">PDF, DOCX, TXT, or MD (Max 10 MB)</p>
                     </div>
                 )}
             </div>
 
             {errorMessage && (
-                <div className="flex items-center gap-2 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-400">
+                <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{errorMessage}</span>
                 </div>

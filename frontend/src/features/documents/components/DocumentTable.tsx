@@ -21,26 +21,26 @@ function StatusBadge({ status }: { status: DocumentStatus }) {
     switch (status) {
         case 'ready':
             return (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400 border border-emerald-500/20">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 border border-emerald-200">
                     <CheckCircle2 className="h-3 w-3" /> Ready
                 </span>
             );
         case 'processing':
             return (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-400 border border-amber-500/20">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 border border-amber-200">
                     <Loader2 className="h-3 w-3 animate-spin" /> Processing
                 </span>
             );
         case 'failed':
             return (
-                <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2.5 py-0.5 text-xs font-medium text-rose-400 border border-rose-500/20">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-red-800 border border-red-200">
                     <AlertTriangle className="h-3 w-3" /> Failed
                 </span>
             );
         case 'uploaded':
         default:
             return (
-                <span className="inline-flex items-center gap-1 rounded-full bg-slate-500/10 px-2.5 py-0.5 text-xs font-medium text-slate-400 border border-slate-500/20">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 border border-slate-200">
                     <Clock className="h-3 w-3" /> Uploaded
                 </span>
             );
@@ -51,18 +51,18 @@ function StatusBadge({ status }: { status: DocumentStatus }) {
 export function DocumentTable({ documents, onReprocess, onDelete }: DocumentTableProps) {
     if (documents.length === 0) {
         return (
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-12 text-center text-slate-500">
-                <FileText className="mx-auto h-8 w-8 text-slate-600 mb-2" />
-                <p className="text-sm">No documents uploaded yet. Upload a file above to begin.</p>
+            <div className="rounded-2xl border border-[#D5DBE2] bg-white p-12 text-center text-[#67788A] shadow-xs">
+                <FileText className="mx-auto h-8 w-8 text-[#96A3B2] mb-2" />
+                <p className="text-sm font-medium">No documents uploaded yet. Upload a file above to begin.</p>
             </div>
         );
     }
 
     return (
-        <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60 shadow-lg">
+        <div className="overflow-hidden rounded-2xl border border-[#D5DBE2] bg-white shadow-md">
             <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-slate-300">
-                    <thead className="border-b border-slate-800 bg-slate-900/80 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <table className="w-full text-left text-sm text-[#34424F]">
+                    <thead className="border-b border-[#D5DBE2] bg-[#F3F5F7] text-xs font-bold uppercase tracking-wider text-[#67788A]">
                         <tr>
                             <th className="px-6 py-4">Name</th>
                             <th className="px-6 py-4">Status</th>
@@ -71,16 +71,18 @@ export function DocumentTable({ documents, onReprocess, onDelete }: DocumentTabl
                             <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-[#E5E9EE]">
                         {documents.map((doc) => (
-                            <tr key={doc.id} className="hover:bg-slate-800/30 transition-colors">
+                            <tr key={doc.id} className="hover:bg-[#F3F5F7]/80 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
-                                        <FileText className="h-4 w-4 shrink-0 text-indigo-400" />
+                                        <div className="rounded-lg bg-[#F4EAEB] p-2 text-[#8C221A]">
+                                            <FileText className="h-4 w-4 shrink-0" />
+                                        </div>
                                         <div>
-                                            <p className="font-medium text-white truncate max-w-xs">{doc.fileName}</p>
+                                            <p className="font-semibold text-[#121921] truncate max-w-xs">{doc.fileName}</p>
                                             {doc.failureReason && (
-                                                <p className="text-xs text-rose-400 truncate max-w-xs">{doc.failureReason}</p>
+                                                <p className="text-xs text-red-600 truncate max-w-xs">{doc.failureReason}</p>
                                             )}
                                         </div>
                                     </div>
@@ -88,25 +90,25 @@ export function DocumentTable({ documents, onReprocess, onDelete }: DocumentTabl
                                 <td className="px-6 py-4">
                                     <StatusBadge status={doc.status} />
                                 </td>
-                                <td className="px-6 py-4 text-slate-400 font-mono text-xs">
+                                <td className="px-6 py-4 text-[#67788A] font-medium text-xs">
                                     {formatBytes(Number(doc.sizeBytes))}
                                 </td>
-                                <td className="px-6 py-4 text-slate-400 text-xs">
+                                <td className="px-6 py-4 text-[#67788A] text-xs font-medium">
                                     {formatDate(doc.createdAt)}
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <div className="flex items-center justify-end gap-2">
+                                    <div className="flex items-center justify-end gap-1.5">
                                         <button
                                             onClick={() => onReprocess(doc.id)}
                                             title="Reprocess document"
-                                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition"
+                                            className="rounded-lg p-1.5 text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#121921] transition cursor-pointer"
                                         >
                                             <RotateCw className="h-4 w-4" />
                                         </button>
                                         <button
                                             onClick={() => onDelete(doc.id)}
                                             title="Delete document"
-                                            className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-500/20 hover:text-rose-400 transition"
+                                            className="rounded-lg p-1.5 text-[#67788A] hover:bg-red-50 hover:text-red-700 transition cursor-pointer"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </button>

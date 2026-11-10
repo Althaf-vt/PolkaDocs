@@ -39,8 +39,8 @@ export function DocumentsPage() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-2xl font-bold tracking-tight text-white">Document Management</h1>
-                <p className="mt-1 text-sm text-slate-400">
+                <h1 className="text-2xl font-extrabold tracking-tight text-[#121921]">Document Management</h1>
+                <p className="mt-1 text-sm text-[#67788A]">
                     Upload documents to index them into your vector knowledge base.
                 </p>
             </div>
@@ -50,9 +50,14 @@ export function DocumentsPage() {
             />
 
             <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-white">Uploaded Files</h2>
+                <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-[#121921]">Uploaded Files</h2>
+                    <span className="text-xs font-semibold text-[#67788A]">
+                        {data?.items ? `${data.items.length} files tracked` : ''}
+                    </span>
+                </div>
                 {isLoading ? (
-                    <div className="h-32 flex items-center justify-center text-slate-500">
+                    <div className="h-32 flex items-center justify-center text-sm font-medium text-[#67788A]">
                         Loading documents...
                     </div>
                 ) : (
