@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
-import { FileText, MessageSquare, LogOut } from 'lucide-react';
+import { FileText, MessageSquare, LogOut, User as UserIcon } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth.store';
 import { authApi } from '../../api/auth.api';
 import { cn } from '../../lib/utils';
@@ -23,7 +23,14 @@ export function DashboardLayout() {
     const navItems = [
         { name: 'Documents', href: '/documents', icon: FileText },
         { name: 'Chat Assistant', href: '/chat', icon: MessageSquare },
+        { name: 'Profile', href: '/profile', icon: UserIcon },
     ];
+
+    const userInitial = user?.name
+        ? user.name.trim()[0].toUpperCase()
+        : user?.email
+            ? user.email[0].toUpperCase()
+            : 'U';
 
     return (
         <div className="flex min-h-screen flex-col bg-[#F3F5F7] text-[#34424F]">
@@ -57,10 +64,19 @@ export function DashboardLayout() {
                         </nav>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs font-semibold text-[#67788A] hidden sm:inline-block">
-                            {user?.email}
-                        </span>
+                    <div className="flex items-center gap-3">
+                        <Link
+                            to="/profile"
+                            title="View Profile"
+                            className="flex items-center gap-2 rounded-lg border border-[#D5DBE2] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#34424F] hover:bg-[#EAEEF2] hover:text-[#121921] hover:border-[#8C221A]/30 transition-colors shadow-xs"
+                        >
+                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#F4EAEB] text-[#8C221A] text-[10px] font-bold">
+                                {userInitial}
+                            </div>
+                            <span className="hidden sm:inline-block max-w-[150px] truncate">
+                                {user?.name || user?.email}
+                            </span>
+                        </Link>
                         <button
                             onClick={handleLogout}
                             className="flex items-center gap-1.5 rounded-lg border border-[#D5DBE2] bg-white px-3 py-1.5 text-xs font-semibold text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#8C221A] transition-colors shadow-xs cursor-pointer"
