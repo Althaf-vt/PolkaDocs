@@ -1,8 +1,9 @@
 import ReactMarkdown from 'react-markdown';
-import { User, Sparkles, FileText } from 'lucide-react';
+import { User, FileText } from 'lucide-react';
 import type { ChatMessage, Citation } from '../../../types/chat.types';
 import { cn } from '../../../lib/utils';
 import { ThinkingIndicator } from '@/components/ui/thinking-indicator';
+import { PolkaDocsIcon } from '@/components/ui/polkadocs-icon';
 
 interface ChatMessageItemProps {
     message: Pick<ChatMessage, 'role' | 'content' | 'citations'>;
@@ -23,7 +24,7 @@ export function ChatMessageItem({
             <div className="flex w-full justify-start">
                 <div className="rounded-2xl border border-[#E5E9EE] bg-white p-4 shadow-xs max-w-[88%] sm:max-w-[80%]">
                     <ThinkingIndicator
-                        assistantAvatar={<Sparkles className="h-4 w-4 text-[#8C221A]" />}
+                        assistantAvatar={<PolkaDocsIcon className="h-4.5 w-4.5" />}
                         labels={{
                             thinking: 'Searching knowledge base & thinking',
                             thinkingRegion: 'PolkaDocs AI is generating a response',
@@ -48,11 +49,11 @@ export function ChatMessageItem({
                     className={cn(
                         'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border',
                         isAssistant
-                            ? 'border-[#8C221A]/25 bg-[#F4EAEB] text-[#8C221A]'
+                            ? 'border-[#8C221A]/20 bg-[#F4EAEB]'
                             : 'border-[#D5DBE2] bg-white text-[#34424F]',
                     )}
                 >
-                    {isAssistant ? <Sparkles className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                    {isAssistant ? <PolkaDocsIcon className="h-4.5 w-4.5" /> : <User className="h-4 w-4" />}
                 </div>
 
                 <div className="flex-1 space-y-3 overflow-hidden">
