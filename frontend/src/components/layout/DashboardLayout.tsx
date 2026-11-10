@@ -1,8 +1,9 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { BookOpen, FileText, MessageSquare, LogOut } from 'lucide-react';
+import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
+import { FileText, MessageSquare, LogOut } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth.store';
 import { authApi } from '../../api/auth.api';
 import { cn } from '../../lib/utils';
+import polkadocsLogo from '../../assets/polkadocs-logo.svg';
 
 export function DashboardLayout() {
     const { user, clearAuth } = useAuthStore();
@@ -29,10 +30,9 @@ export function DashboardLayout() {
             <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md">
                 <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-8">
-                        <div className="flex items-center gap-2">
-                            <BookOpen className="h-6 w-6 text-indigo-500" />
-                            <span className="text-lg font-bold tracking-tight text-white">PolkaDocs</span>
-                        </div>
+                        <Link to="/documents" className="flex items-center transition opacity-95 hover:opacity-100">
+                            <img src={polkadocsLogo} alt="PolkaDocs Logo" className="h-8 w-auto" />
+                        </Link>
                         <nav className="flex items-center space-x-1">
                             {navItems.map((item) => {
                                 const Icon = item.icon;
