@@ -9,6 +9,7 @@ import { CitationDrawer } from '../components/CitationDrawer';
 import { useChatStream } from '../hooks/useChatStream';
 import type { ChatMessage, Citation } from '../../../types/chat.types';
 import { MessageSquare } from 'lucide-react';
+import polkadocsLogo from '../../../assets/polkadocs-logo.svg';
 
 export function ChatPage() {
     const queryClient = useQueryClient();
@@ -143,7 +144,7 @@ export function ChatPage() {
                                 </div>
                             ) : messages.length === 0 && !isStreaming ? (
                                 <div className="flex h-full flex-col items-center justify-center text-center text-slate-500">
-                                    <MessageSquare className="h-10 w-10 text-slate-700 mb-3" />
+                                    <img src={polkadocsLogo} alt="PolkaDocs Logo" className="h-10 w-auto opacity-70 mb-4" />
                                     <p className="text-sm font-medium text-slate-400">No messages in this conversation</p>
                                     <p className="text-xs text-slate-600 mt-1">
                                         Ask a question below to retrieve knowledge from your indexed documents.
