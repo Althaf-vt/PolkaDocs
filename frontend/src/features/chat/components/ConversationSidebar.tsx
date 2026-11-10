@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Plus, MessageSquare, Trash2, Edit2, Check, X } from 'lucide-react';
 import type { ConversationItem } from '../../../types/chat.types';
 import { cn } from '../../../lib/utils';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
+import { Magnet } from '@/components/ui/magnet';
 
 interface ConversationSidebarProps {
     conversations: ConversationItem[];
@@ -22,6 +24,7 @@ export function ConversationSidebar({
 }: ConversationSidebarProps) {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editTitle, setEditTitle] = useState('');
+    const [deletingConv, setDeletingConv] = useState<ConversationItem | null>(null);
 
     const handleStartEdit = (conv: ConversationItem) => {
         setEditingId(conv.id);
@@ -35,21 +38,30 @@ export function ConversationSidebar({
         setEditingId(null);
     };
 
+    const handleConfirmDelete = () => {
+        if (deletingConv) {
+            onDeleteConversation(deletingConv.id);
+            setDeletingConv(null);
+        }
+    };
+
     return (
-        <aside className="flex h-full w-72 flex-col border-r border-slate-800 bg-slate-900/60 backdrop-blur-md">
-            <div className="p-4 border-b border-slate-800">
-                <button
-                    onClick={onCreateConversation}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition cursor-pointer shadow-sm"
-                >
-                    <Plus className="h-4 w-4" />
-                    <span>New Chat</span>
-                </button>
+        <aside className="flex h-full w-72 flex-col border-r border-[#D5DBE2] bg-[#F8FAFC]">
+            <div className="p-4 border-b border-[#D5DBE2]">
+                <Magnet padding={45} magnetStrength={2.5} maxOffset={6} wrapperClassName="w-full" innerClassName="w-full">
+                    <button
+                        onClick={onCreateConversation}
+                        className="btn-tactile flex w-full items-center justify-center gap-2 rounded-xl bg-[#8C221A] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#731A13] cursor-pointer shadow-xs"
+                    >
+                        <Plus className="h-4 w-4" />
+                        <span>New Chat</span>
+                    </button>
+                </Magnet>
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
                 {conversations.length === 0 ? (
-                    <p className="p-4 text-center text-xs text-slate-500">No previous conversations.</p>
+                    <p className="p-4 text-center text-xs text-[#67788A]">No previous conversations.</p>
                 ) : (
                     conversations.map((conv) => {
                         const isActive = conv.id === activeConversationId;
@@ -62,8 +74,8 @@ export function ConversationSidebar({
                                 className={cn(
                                     'group flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium transition cursor-pointer',
                                     isActive
-                                        ? 'bg-slate-800 text-white border border-slate-700/60'
-                                        : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200',
+                                        ? 'bg-[#F4EAEB] text-[#8C221A] font-semibold border border-[#8C221A]/20 shadow-xs'
+                                        : 'text-[#34424F] hover:bg-[#EAEEF2] hover:text-[#121921] border border-transparent',
                                 )}
                             >
                                 {isEditing ? (
@@ -72,18 +84,18 @@ export function ConversationSidebar({
                                             type="text"
                                             value={editTitle}
                                             onChange={(e) => setEditTitle(e.target.value)}
-                                            className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-white focus:outline-none"
+                                            className="w-full rounded border border-[#D5DBE2] bg-white px-2 py-1 text-xs text-[#121921] focus:outline-none focus:border-[#8C221A]"
                                             autoFocus
                                         />
                                         <button
                                             onClick={() => handleSaveEdit(conv.id)}
-                                            className="p-1 text-emerald-400 hover:text-emerald-300"
+                                            className="p-1 text-emerald-600 hover:text-emerald-700"
                                         >
                                             <Check className="h-3.5 w-3.5" />
                                         </button>
                                         <button
                                             onClick={() => setEditingId(null)}
-                                            className="p-1 text-slate-400 hover:text-slate-300"
+                                            className="p-1 text-[#67788A] hover:text-[#121921]"
                                         >
                                             <X className="h-3.5 w-3.5" />
                                         </button>
@@ -91,7 +103,7 @@ export function ConversationSidebar({
                                 ) : (
                                     <>
                                         <div className="flex items-center gap-2 truncate">
-                                            <MessageSquare className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                                            <MessageSquare className={cn("h-3.5 w-3.5 shrink-0", isActive ? "text-[#8C221A]" : "text-[#67788A]")} />
                                             <span className="truncate">{conv.title || 'Untitled Conversation'}</span>
                                         </div>
 
@@ -101,16 +113,17 @@ export function ConversationSidebar({
                                                     e.stopPropagation();
                                                     handleStartEdit(conv);
                                                 }}
-                                                className="p-1 text-slate-400 hover:text-slate-200"
+                                                className="p-1 text-[#67788A] hover:text-[#8C221A]"
                                             >
                                                 <Edit2 className="h-3 w-3" />
                                             </button>
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    onDeleteConversation(conv.id);
+                                                    setDeletingConv(conv);
                                                 }}
-                                                className="p-1 text-slate-400 hover:text-rose-400"
+                                                title="Delete chat"
+                                                className="p-1 text-[#67788A] hover:text-rose-600 transition"
                                             >
                                                 <Trash2 className="h-3 w-3" />
                                             </button>
@@ -122,6 +135,22 @@ export function ConversationSidebar({
                     })
                 )}
             </div>
+
+            <ConfirmationModal
+                isOpen={deletingConv !== null}
+                title="Delete Conversation"
+                description={
+                    <span>
+                        Are you sure you want to delete <strong className="text-[#121921] font-semibold">{deletingConv?.title || 'this conversation'}</strong>? All messages, answers, and source citations in this thread will be permanently deleted. This action cannot be undone.
+                    </span>
+                }
+                confirmText="Delete Chat"
+                cancelText="Cancel"
+                variant="danger"
+                icon={<Trash2 className="h-5 w-5" />}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setDeletingConv(null)}
+            />
         </aside>
     );
 }

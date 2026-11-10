@@ -5,6 +5,7 @@ import { LoginPage } from '../features/auth/pages/LoginPage';
 import { RegisterPage } from '../features/auth/pages/RegisterPage';
 import { DocumentsPage } from '../features/documents/pages/DocumentsPage';
 import { ChatPage } from '../features/chat/Pages/ChatPage';
+import { ProfilePage } from '../features/profile/pages/ProfilePage';
 import { ProtectedRoute, PublicRoute } from './guards';
 
 export const router = createBrowserRouter([
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
         children: [
             { path: 'documents', element: <DocumentsPage /> },
             { path: 'chat', element: <ChatPage /> },
+            { path: 'profile', element: <ProfilePage /> },
         ],
     },
 ]);

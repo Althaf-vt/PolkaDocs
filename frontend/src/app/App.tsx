@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { router } from '../routes';
 import { useAuthStore } from '../stores/auth.store';
 import { authApi } from '../api/auth.api';
+import { ReloadPrompt } from '@/components/common/ReloadPrompt';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
+      <ReloadPrompt />
     </QueryClientProvider>
   );
 }

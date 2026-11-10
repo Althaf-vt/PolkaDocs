@@ -9,6 +9,7 @@ import { CitationDrawer } from '../components/CitationDrawer';
 import { useChatStream } from '../hooks/useChatStream';
 import type { ChatMessage, Citation } from '../../../types/chat.types';
 import { MessageSquare } from 'lucide-react';
+import polkadocsLogo from '../../../assets/polkadocs-logo.svg';
 
 export function ChatPage() {
     const queryClient = useQueryClient();
@@ -123,7 +124,7 @@ export function ChatPage() {
     };
 
     return (
-        <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 shadow-2xl">
+        <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-2xl border border-[#D5DBE2] bg-white shadow-xl">
             <ConversationSidebar
                 conversations={conversations}
                 activeConversationId={activeConversationId}
@@ -133,20 +134,20 @@ export function ChatPage() {
                 onDeleteConversation={(id) => deleteConversationMutation.mutate(id)}
             />
 
-            <div className="flex flex-1 flex-col overflow-hidden bg-slate-950/40">
+            <div className="flex flex-1 flex-col overflow-hidden bg-[#F3F5F7]/30">
                 {activeConversationId ? (
                     <>
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">
                             {isLoadingMessages ? (
-                                <div className="flex h-full items-center justify-center text-xs text-slate-500">
+                                <div className="flex h-full items-center justify-center text-xs font-medium text-[#67788A]">
                                     Loading messages...
                                 </div>
                             ) : messages.length === 0 && !isStreaming ? (
-                                <div className="flex h-full flex-col items-center justify-center text-center text-slate-500">
-                                    <MessageSquare className="h-10 w-10 text-slate-700 mb-3" />
-                                    <p className="text-sm font-medium text-slate-400">No messages in this conversation</p>
-                                    <p className="text-xs text-slate-600 mt-1">
-                                        Ask a question below to retrieve knowledge from your indexed documents.
+                                <div className="flex h-full flex-col items-center justify-center text-center text-[#67788A]">
+                                    <img src={polkadocsLogo} alt="PolkaDocs Logo" className="h-10 w-auto opacity-75 mb-4" />
+                                    <p className="text-sm font-bold text-[#121921]">No messages in this conversation</p>
+                                    <p className="text-xs text-[#67788A] mt-1 max-w-sm">
+                                        Ask a question below to retrieve verified knowledge from your indexed documents.
                                     </p>
                                 </div>
                             ) : (
@@ -189,12 +190,13 @@ export function ChatPage() {
                         />
                     </>
                 ) : (
-                    <div className="flex h-full flex-col items-center justify-center text-center text-slate-500">
-                        <MessageSquare className="h-12 w-12 text-slate-700 mb-3" />
-                        <p className="text-sm font-medium text-slate-400">Select or start a new conversation</p>
+                    <div className="flex h-full flex-col items-center justify-center text-center text-[#67788A]">
+                        <MessageSquare className="h-12 w-12 text-[#BAC3CE] mb-3" />
+                        <p className="text-sm font-bold text-[#121921]">Select or start a new conversation</p>
+                        <p className="text-xs text-[#67788A] mt-1">Begin asking questions to explore your knowledge base.</p>
                         <button
                             onClick={() => createConversationMutation.mutate('New Chat')}
-                            className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 transition cursor-pointer"
+                            className="mt-4 rounded-lg bg-[#8C221A] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#731A13] transition cursor-pointer"
                         >
                             Start New Chat
                         </button>
