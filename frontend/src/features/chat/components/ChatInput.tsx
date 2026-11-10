@@ -1,6 +1,7 @@
-import { useState, type FormEvent, type KeyboardEvent } from 'react';
-import { Send, Square, Filter } from 'lucide-react';
+import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent } from 'react';
+import { Send, Square, Files, X } from 'lucide-react';
 import type { DocumentItem } from '../../../types/document.types';
+import { cn } from '../../../lib/utils';
 
 interface ChatInputProps {
     onSendMessage: (content: string, documentIds?: string[]) => void;
@@ -18,6 +19,31 @@ export function ChatInput({
     const [content, setContent] = useState('');
     const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+
+    // Auto-close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target as Node) &&
+                buttonRef.current &&
+                !buttonRef.current.contains(event.target as Node)
+            ) {
+                setShowFilterDropdown(false);
+            }
+        };
+
+        if (showFilterDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showFilterDropdown]);
 
     const readyDocuments = documents.filter((doc) => doc.status === 'ready');
 
@@ -47,39 +73,75 @@ export function ChatInput({
 
     return (
         <div className="relative border-t border-[#E5E9EE] bg-white p-4">
+            {/* Document Scoping Popover positioned on the right, above the trigger button */}
             {showFilterDropdown && (
-                <div className="absolute bottom-full left-4 mb-2 w-80 rounded-xl border border-[#D5DBE2] bg-white p-3 shadow-xl">
-                    <div className="flex items-center justify-between border-b border-[#E5E9EE] pb-2 mb-2">
-                        <span className="text-xs font-semibold text-[#121921]">
-                            Scope Search to Documents
-                        </span>
-                        {selectedDocIds.length > 0 && (
-                            <button
-                                onClick={() => setSelectedDocIds([])}
-                                className="text-xs font-medium text-[#8C221A] hover:text-[#731A13]"
-                            >
-                                Clear all
-                            </button>
-                        )}
-                    </div>
-                    <div className="max-h-48 overflow-y-auto space-y-1">
-                        {readyDocuments.length === 0 ? (
-                            <p className="text-xs text-[#67788A] py-2">No processed documents available.</p>
-                        ) : (
-                            readyDocuments.map((doc) => (
-                                <label
-                                    key={doc.id}
-                                    className="flex items-center gap-2 rounded-lg p-2 text-xs text-[#34424F] hover:bg-[#F3F5F7] cursor-pointer"
+                <div
+                    ref={dropdownRef}
+                    className="absolute bottom-full right-4 mb-3 w-80 sm:w-96 rounded-2xl border border-[#D5DBE2] bg-white p-4 shadow-2xl z-30 animate-in fade-in zoom-in-95 duration-150"
+                >
+                    <div className="flex items-center justify-between border-b border-[#E5E9EE] pb-2.5 mb-2.5">
+                        <div className="flex items-center gap-2">
+                            <div className="rounded-lg bg-[#F4EAEB] p-1 text-[#8C221A]">
+                                <Files className="h-4 w-4" />
+                            </div>
+                            <span className="text-xs font-bold text-[#121921]">
+                                Scope to Documents
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {selectedDocIds.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedDocIds([])}
+                                    className="text-xs font-semibold text-[#8C221A] hover:text-[#731A13] transition cursor-pointer"
                                 >
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedDocIds.includes(doc.id)}
-                                        onChange={() => toggleDocumentSelection(doc.id)}
-                                        className="rounded border-[#D5DBE2] bg-white text-[#8C221A] focus:ring-[#8C221A]/20"
-                                    />
-                                    <span className="truncate">{doc.fileName}</span>
-                                </label>
-                            ))
+                                    Clear all
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => setShowFilterDropdown(false)}
+                                title="Close"
+                                className="rounded-lg p-1 text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#121921] transition cursor-pointer"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <p className="text-[11px] text-[#67788A] mb-2 leading-relaxed">
+                        Select specific files to constrain the search context. If none are selected, all indexed documents are queried.
+                    </p>
+
+                    <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
+                        {readyDocuments.length === 0 ? (
+                            <p className="text-xs text-[#67788A] py-3 text-center">
+                                No processed documents available. Upload documents first to scope queries.
+                            </p>
+                        ) : (
+                            readyDocuments.map((doc) => {
+                                const isChecked = selectedDocIds.includes(doc.id);
+                                return (
+                                    <label
+                                        key={doc.id}
+                                        className={cn(
+                                            'flex items-center gap-2.5 rounded-xl p-2 text-xs transition cursor-pointer',
+                                            isChecked
+                                                ? 'bg-[#F4EAEB] text-[#8C221A] font-semibold'
+                                                : 'text-[#34424F] hover:bg-[#F3F5F7]',
+                                        )}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={() => toggleDocumentSelection(doc.id)}
+                                            className="rounded border-[#D5DBE2] text-[#8C221A] focus:ring-[#8C221A]/20"
+                                        />
+                                        <span className="truncate">{doc.fileName}</span>
+                                    </label>
+                                );
+                            })
                         )}
                     </div>
                 </div>
@@ -93,20 +155,28 @@ export function ChatInput({
                         onKeyDown={handleKeyDown}
                         placeholder="Ask a question about your uploaded documents... (Enter to send, Shift+Enter for newline)"
                         rows={2}
-                        className="w-full resize-none rounded-xl border border-[#D5DBE2] bg-[#F8FAFC] px-4 py-3 pr-24 text-sm text-[#121921] placeholder-[#96A3B2] focus:border-[#8C221A] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8C221A]/15 transition"
+                        className="w-full resize-none rounded-xl border border-[#D5DBE2] bg-[#F8FAFC] px-4 py-3 pr-28 text-sm text-[#121921] placeholder-[#96A3B2] focus:border-[#8C221A] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8C221A]/15 transition"
                     />
 
                     <div className="absolute right-3 flex items-center gap-2">
                         <button
+                            ref={buttonRef}
                             type="button"
                             onClick={() => setShowFilterDropdown((prev) => !prev)}
-                            title="Scope to specific documents"
-                            className={`rounded-lg p-2 transition cursor-pointer ${selectedDocIds.length > 0
-                                ? 'bg-[#F4EAEB] text-[#8C221A] border border-[#8C221A]/30'
-                                : 'text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#121921]'
-                                }`}
+                            title="Scope search to specific documents"
+                            className={cn(
+                                'flex items-center gap-1.5 rounded-lg p-2 text-xs font-semibold transition cursor-pointer',
+                                selectedDocIds.length > 0 || showFilterDropdown
+                                    ? 'bg-[#F4EAEB] text-[#8C221A] border border-[#8C221A]/30 shadow-xs'
+                                    : 'text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#121921]',
+                            )}
                         >
-                            <Filter className="h-4 w-4" />
+                            <Files className="h-4 w-4" />
+                            {selectedDocIds.length > 0 && (
+                                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#8C221A] px-1 text-[10px] font-bold text-white">
+                                    {selectedDocIds.length}
+                                </span>
+                            )}
                         </button>
 
                         {isStreaming ? (
