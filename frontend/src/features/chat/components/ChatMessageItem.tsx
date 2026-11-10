@@ -2,6 +2,7 @@ import ReactMarkdown from 'react-markdown';
 import { User, Sparkles, FileText } from 'lucide-react';
 import type { ChatMessage, Citation } from '../../../types/chat.types';
 import { cn } from '../../../lib/utils';
+import { ThinkingIndicator } from '@/components/ui/thinking-indicator';
 
 interface ChatMessageItemProps {
     message: Pick<ChatMessage, 'role' | 'content' | 'citations'>;
@@ -15,6 +16,21 @@ export function ChatMessageItem({
     onCitationClick,
 }: ChatMessageItemProps) {
     const isAssistant = message.role === 'assistant';
+
+    // Show polished thinking state when waiting for the first stream token
+    if (isAssistant && isStreaming && !message.content) {
+        return (
+            <div className="rounded-xl border border-[#E5E9EE] bg-white p-4 shadow-xs">
+                <ThinkingIndicator
+                    assistantAvatar={<Sparkles className="h-4 w-4 text-[#8C221A]" />}
+                    labels={{
+                        thinking: 'Searching knowledge base & thinking',
+                        thinkingRegion: 'PolkaDocs AI is generating a response',
+                    }}
+                />
+            </div>
+        );
+    }
 
     return (
         <div
