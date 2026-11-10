@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, MessageSquare, Trash2, Edit2, Check, X } from 'lucide-react';
 import type { ConversationItem } from '../../../types/chat.types';
 import { cn } from '../../../lib/utils';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 
 interface ConversationSidebarProps {
     conversations: ConversationItem[];
@@ -22,6 +23,7 @@ export function ConversationSidebar({
 }: ConversationSidebarProps) {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editTitle, setEditTitle] = useState('');
+    const [deletingConv, setDeletingConv] = useState<ConversationItem | null>(null);
 
     const handleStartEdit = (conv: ConversationItem) => {
         setEditingId(conv.id);
@@ -33,6 +35,13 @@ export function ConversationSidebar({
             onUpdateTitle(id, editTitle.trim());
         }
         setEditingId(null);
+    };
+
+    const handleConfirmDelete = () => {
+        if (deletingConv) {
+            onDeleteConversation(deletingConv.id);
+            setDeletingConv(null);
+        }
     };
 
     return (
@@ -108,9 +117,10 @@ export function ConversationSidebar({
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    onDeleteConversation(conv.id);
+                                                    setDeletingConv(conv);
                                                 }}
-                                                className="p-1 text-[#67788A] hover:text-rose-600"
+                                                title="Delete chat"
+                                                className="p-1 text-[#67788A] hover:text-rose-600 transition"
                                             >
                                                 <Trash2 className="h-3 w-3" />
                                             </button>
@@ -122,6 +132,22 @@ export function ConversationSidebar({
                     })
                 )}
             </div>
+
+            <ConfirmationModal
+                isOpen={deletingConv !== null}
+                title="Delete Conversation"
+                description={
+                    <span>
+                        Are you sure you want to delete <strong className="text-[#121921] font-semibold">{deletingConv?.title || 'this conversation'}</strong>? All messages, answers, and source citations in this thread will be permanently deleted. This action cannot be undone.
+                    </span>
+                }
+                confirmText="Delete Chat"
+                cancelText="Cancel"
+                variant="danger"
+                icon={<Trash2 className="h-5 w-5" />}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setDeletingConv(null)}
+            />
         </aside>
     );
 }
