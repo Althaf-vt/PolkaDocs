@@ -25,6 +25,10 @@ export function ProfilePage() {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [copiedId, setCopiedId] = useState(false);
 
+    // Track whether personal information has been modified
+    const initialName = user?.name ?? '';
+    const isDirty = name.trim() !== initialName.trim();
+
     useEffect(() => {
         if (user?.name !== undefined && user.name !== null) {
             setName(user.name);
@@ -182,25 +186,36 @@ export function ProfilePage() {
                                 </p>
                             </div>
 
-                            <div className="pt-2 flex justify-end">
-                                <button
-                                    type="submit"
-                                    disabled={isSaving}
-                                    className="flex items-center gap-2 rounded-xl bg-[#8C221A] px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-[#731A13] focus:outline-none focus:ring-2 focus:ring-[#8C221A] focus:ring-offset-2 transition cursor-pointer disabled:opacity-50 active:scale-[0.99]"
-                                >
-                                    {isSaving ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            <span>Saving Changes...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Save className="h-4 w-4" />
-                                            <span>Save Changes</span>
-                                        </>
-                                    )}
-                                </button>
-                            </div>
+                            {/* Save Changes - only displayed when input data has been modified */}
+                            {(isDirty || isSaving) && (
+                                <div className="pt-2 flex items-center justify-end gap-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                                    <button
+                                        type="button"
+                                        disabled={isSaving}
+                                        onClick={() => setName(user?.name || '')}
+                                        className="rounded-xl border border-[#D5DBE2] bg-white px-4 py-2.5 text-sm font-semibold text-[#67788A] hover:bg-[#EAEEF2] hover:text-[#121921] transition shadow-xs cursor-pointer disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isSaving}
+                                        className="flex items-center gap-2 rounded-xl bg-[#8C221A] px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-[#731A13] focus:outline-none focus:ring-2 focus:ring-[#8C221A] focus:ring-offset-2 transition cursor-pointer disabled:opacity-50 active:scale-[0.99]"
+                                    >
+                                        {isSaving ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                <span>Saving Changes...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save className="h-4 w-4" />
+                                                <span>Save Changes</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
                         </form>
                     </div>
                 </div>
