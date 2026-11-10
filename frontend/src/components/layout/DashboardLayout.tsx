@@ -1,13 +1,15 @@
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
-import { FileText, MessageSquare, LogOut, User as UserIcon } from 'lucide-react';
+import { FileText, MessageSquare, LogOut, User as UserIcon, Download } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth.store';
 import { authApi } from '../../api/auth.api';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 import { cn } from '../../lib/utils';
 import polkadocsLogo from '../../assets/polkadocs-logo.svg';
 
 export function DashboardLayout() {
     const { user, clearAuth } = useAuthStore();
     const navigate = useNavigate();
+    const { canInstall, triggerInstall } = usePWAInstall();
 
     const handleLogout = async () => {
         try {
@@ -65,6 +67,16 @@ export function DashboardLayout() {
                     </div>
 
                     <div className="flex items-center gap-3">
+                        {canInstall && (
+                            <button
+                                onClick={triggerInstall}
+                                title="Install PolkaDocs as desktop or mobile app"
+                                className="flex items-center gap-1.5 rounded-lg border border-[#8C221A]/20 bg-[#F4EAEB] px-2.5 py-1.5 text-xs font-semibold text-[#8C221A] hover:bg-[#EADCE0] transition-colors shadow-xs cursor-pointer animate-in fade-in"
+                            >
+                                <Download className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline-block">Install App</span>
+                            </button>
+                        )}
                         <Link
                             to="/profile"
                             title="View Profile"
