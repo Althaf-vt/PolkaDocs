@@ -31,29 +31,12 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
+    env_file:
+      - backend/.env
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: 3000
       DATABASE_URL: postgres://PolkaDocs:password@db:5432/PolkaDocs
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
-      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-7d}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-      AI_PROVIDER: ${AI_PROVIDER:-gemini}
-      CHAT_MODEL: ${CHAT_MODEL:-gemini-2.5-flash}
-      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-004}
-      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-768}
-      CHUNK_SIZE: ${CHUNK_SIZE:-900}
-      CHUNK_OVERLAP: ${CHUNK_OVERLAP:-120}
-      RETRIEVAL_TOP_K: ${RETRIEVAL_TOP_K:-5}
-      RETRIEVAL_MIN_SCORE: ${RETRIEVAL_MIN_SCORE:-0.7}
-      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-10}
-      R2_ENDPOINT: ${R2_ENDPOINT}
-      R2_BUCKET_NAME: ${R2_BUCKET_NAME}
-      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
-      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
 
   prometheus:
     image: prom/prometheus:v2.51.0
