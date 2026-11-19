@@ -26,6 +26,24 @@ export function ProfilePage() {
     const initialName = user?.name ?? '';
     const isDirty = name.trim() !== initialName.trim();
 
+    // Hydrate latest user profile details on page mount
+    useEffect(() => {
+        let isMounted = true;
+        usersApi
+            .getProfile()
+            .then((profile) => {
+                if (isMounted && profile) {
+                    setUser(profile);
+                }
+            })
+            .catch(() => {
+                // Non-blocking: fallback to current in-memory user
+            });
+        return () => {
+            isMounted = false;
+        };
+    }, [setUser]);
+
     useEffect(() => {
         if (user?.name !== undefined && user.name !== null) {
             setName(user.name);
