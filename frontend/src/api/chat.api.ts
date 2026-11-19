@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient, API_BASE_URL } from './client';
 import type {
     ConversationItem,
     ChatMessage,
@@ -51,7 +51,7 @@ export const chatApi = {
         payload: SendMessagePayload,
         accessToken: string,
     ): Promise<Response> => {
-        return fetch(`/api/v1/conversations/${conversationId}/messages`, {
+        return fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

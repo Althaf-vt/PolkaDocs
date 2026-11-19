@@ -8,6 +8,7 @@ import { RefreshToken } from '../entities/refresh-token.entity';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { AppException } from '../../../common/errors/app.exception';
+import { parseDurationToMs } from '../../../common/utils/time.util';
 import { PasswordService } from './password.service';
 import { AuthTokens } from '../interfaces/auth-tokens.interface';
 
@@ -152,8 +153,8 @@ export class AuthService {
     ): Promise<AuthTokens> {
         const accessSecret = this.configService.get<string>('jwt.accessSecret');
         const refreshSecret = this.configService.get<string>('jwt.refreshSecret');
-        const accessTtl = this.configService.get<string>('jwt.accessTtl');
-        const refreshTtl = this.configService.get<string>('jwt.refreshTtl');
+        const accessTtl = this.configService.get<string>('jwt.accessTtl') || '15m';
+        const refreshTtl = this.configService.get<string>('jwt.refreshTtl') || '7d';
 
         const accessToken = await this.jwtService.signAsync(
             { sub: userId, email },
@@ -173,8 +174,7 @@ export class AuthService {
 
         const tokenHash = await this.passwordService.hash(refreshToken);
 
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
+        const expiresAt = new Date(Date.now() + parseDurationToMs(refreshTtl));
 
         const tokenRecord = this.refreshTokenRepository.create({
             userId,
