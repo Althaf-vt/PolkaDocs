@@ -9,13 +9,10 @@ import {
     Calendar,
     Clock,
     ShieldCheck,
-    Check,
-    Copy,
     Save,
     Loader2,
     AlertCircle,
     CheckCircle2,
-    KeyRound,
 } from 'lucide-react';
 
 export function ProfilePage() {
@@ -24,24 +21,34 @@ export function ProfilePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [copiedId, setCopiedId] = useState(false);
 
     // Track whether personal information has been modified
     const initialName = user?.name ?? '';
     const isDirty = name.trim() !== initialName.trim();
+
+    // Hydrate latest user profile details on page mount
+    useEffect(() => {
+        let isMounted = true;
+        usersApi
+            .getProfile()
+            .then((profile) => {
+                if (isMounted && profile) {
+                    setUser(profile);
+                }
+            })
+            .catch(() => {
+                // Non-blocking: fallback to current in-memory user
+            });
+        return () => {
+            isMounted = false;
+        };
+    }, [setUser]);
 
     useEffect(() => {
         if (user?.name !== undefined && user.name !== null) {
             setName(user.name);
         }
     }, [user?.name]);
-
-    const handleCopyId = () => {
-        if (!user?.id) return;
-        void navigator.clipboard.writeText(user.id);
-        setCopiedId(true);
-        setTimeout(() => setCopiedId(false), 2000);
-    };
 
     const handleSave = async (e: FormEvent) => {
         e.preventDefault();
@@ -102,7 +109,7 @@ export function ProfilePage() {
             )}
 
             {/* Profile Overview Banner */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-[#D5DBE2] bg-white p-6 shadow-md">
+            <div className="flex items-center justify-between gap-4 rounded-2xl border border-[#D5DBE2] bg-white p-6 shadow-md">
                 <div className="flex items-center gap-4">
                     <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#F4EAEB] border border-[#8C221A]/20 text-[#8C221A] text-xl font-bold shadow-xs">
                         {getInitials()}
@@ -118,18 +125,6 @@ export function ProfilePage() {
                         </div>
                         <p className="text-xs text-[#67788A] mt-0.5">{user?.email}</p>
                     </div>
-                </div>
-
-                <div className="flex items-center gap-2 rounded-xl bg-[#F3F5F7] px-3.5 py-2 border border-[#E5E9EE] text-xs font-medium text-[#34424F]">
-                    <span className="text-[#67788A]">User ID:</span>
-                    <span className="font-mono text-[#121921] max-w-[120px] sm:max-w-none truncate">{user?.id}</span>
-                    <button
-                        onClick={handleCopyId}
-                        title="Copy User ID"
-                        className="rounded-md p-1 hover:bg-[#EAEEF2] text-[#67788A] hover:text-[#121921] transition cursor-pointer"
-                    >
-                        {copiedId ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                    </button>
                 </div>
             </div>
 
@@ -253,16 +248,6 @@ export function ProfilePage() {
                                     <p className="text-xs text-[#67788A]">
                                         {user?.updatedAt ? formatDate(user.updatedAt) : 'N/A'}
                                     </p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-3">
-                                <div className="rounded-lg bg-[#F3F5F7] p-2 text-[#67788A] shrink-0 border border-[#E5E9EE]">
-                                    <KeyRound className="h-4 w-4" />
-                                </div>
-                                <div>
-                                    <p className="text-xs font-bold text-[#121921]">Security Protocol</p>
-                                    <p className="text-xs text-[#67788A]">Bcrypt + JWT Cookie Session</p>
                                 </div>
                             </div>
                         </div>

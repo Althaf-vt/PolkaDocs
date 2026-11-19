@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { authApi } from '../../../api/auth.api';
 import { useAuthStore } from '../../../stores/auth.store';
 import { Magnet } from '@/components/ui/magnet';
@@ -10,6 +10,8 @@ export function RegisterPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -71,26 +73,50 @@ export function RegisterPage() {
 
             <div>
                 <label className="block text-xs font-semibold text-[#34424F]">Password</label>
-                <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min 8 characters"
-                    className="mt-1.5 block w-full rounded-lg border border-[#D5DBE2] bg-white px-3.5 py-2.5 text-sm text-[#121921] placeholder-[#96A3B2] transition focus:border-[#8C221A] focus:outline-none focus:ring-2 focus:ring-[#8C221A]/15"
-                />
+                <div className="relative mt-1.5">
+                    <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Min 8 characters"
+                        className="block w-full rounded-lg border border-[#D5DBE2] bg-white py-2.5 pl-3.5 pr-10 text-sm text-[#121921] placeholder-[#96A3B2] transition focus:border-[#8C221A] focus:outline-none focus:ring-2 focus:ring-[#8C221A]/15"
+                    />
+                    <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#67788A] hover:text-[#121921] transition cursor-pointer"
+                        title={showPassword ? 'Hide password' : 'Show password'}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                </div>
             </div>
 
             <div>
                 <label className="block text-xs font-semibold text-[#34424F]">Confirm password</label>
-                <input
-                    type="password"
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="mt-1.5 block w-full rounded-lg border border-[#D5DBE2] bg-white px-3.5 py-2.5 text-sm text-[#121921] placeholder-[#96A3B2] transition focus:border-[#8C221A] focus:outline-none focus:ring-2 focus:ring-[#8C221A]/15"
-                />
+                <div className="relative mt-1.5">
+                    <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="block w-full rounded-lg border border-[#D5DBE2] bg-white py-2.5 pl-3.5 pr-10 text-sm text-[#121921] placeholder-[#96A3B2] transition focus:border-[#8C221A] focus:outline-none focus:ring-2 focus:ring-[#8C221A]/15"
+                    />
+                    <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#67788A] hover:text-[#121921] transition cursor-pointer"
+                        title={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                        aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                    >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                </div>
             </div>
 
             <Magnet padding={45} magnetStrength={2.5} maxOffset={6} wrapperClassName="w-full" innerClassName="w-full" disabled={isLoading}>

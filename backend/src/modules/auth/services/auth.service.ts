@@ -40,7 +40,7 @@ export class AuthService {
             registerDto.name,
         );
 
-        return this.generateTokenPair(user.id, user.email, user.name);
+        return this.generateTokenPair(user.id, user.email, user.name, user.createdAt, user.updatedAt);
     }
 
     async login(loginDto: LoginDto): Promise<AuthTokens> {
@@ -65,7 +65,7 @@ export class AuthService {
             );
         }
 
-        return this.generateTokenPair(user.id, user.email, user.name);
+        return this.generateTokenPair(user.id, user.email, user.name, user.createdAt, user.updatedAt);
     }
 
     async refresh(refreshTokenRaw: string): Promise<AuthTokens> {
@@ -114,7 +114,7 @@ export class AuthService {
         await this.refreshTokenRepository.save(matchedTokenRecord);
 
         const user = await this.usersService.findById(payload.sub);
-        return this.generateTokenPair(user.id, user.email, user.name);
+        return this.generateTokenPair(user.id, user.email, user.name, user.createdAt, user.updatedAt);
     }
 
     async logout(refreshTokenRaw: string): Promise<void> {
@@ -150,6 +150,8 @@ export class AuthService {
         userId: string,
         email: string,
         name: string | null = null,
+        createdAt?: Date | string,
+        updatedAt?: Date | string,
     ): Promise<AuthTokens> {
         const accessSecret = this.configService.get<string>('jwt.accessSecret');
         const refreshSecret = this.configService.get<string>('jwt.refreshSecret');
@@ -190,6 +192,8 @@ export class AuthService {
                 id: userId,
                 email,
                 name,
+                createdAt,
+                updatedAt,
             },
         };
     }
