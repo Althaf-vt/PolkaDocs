@@ -29,6 +29,7 @@ export class UsersController {
             id: updated.id,
             email: updated.email,
             name: updated.name,
+            createdAt: updated.createdAt,
             updatedAt: updated.updatedAt,
         };
     }
