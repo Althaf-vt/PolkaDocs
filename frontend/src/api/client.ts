@@ -7,9 +7,12 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
     _retry?: boolean;
 }
 
+// Centralized API base URL matching environment configuration
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
+
 // Centralized Axios client instance
 export const apiClient = axios.create({
-    baseURL: '/api/v1',
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -83,7 +86,7 @@ apiClient.interceptors.response.use(
             try {
                 // Exchange HTTP-only refresh cookie for a new access token
                 const refreshResponse = await axios.post<AuthResponse>(
-                    '/api/v1/auth/refresh',
+                    `${API_BASE_URL}/auth/refresh`,
                     {},
                     { withCredentials: true },
                 );
