@@ -1,20 +1,15 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, Req, Res } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+import type { Request, Response, CookieOptions } from 'express';
 import { AuthService } from '../services/auth.service';
 import type { AuthUserPayload } from '../interfaces/auth-tokens.interface';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { Public } from '../../../common/decorators/public.decorator';
 import { AppException } from '../../../common/errors/app.exception';
+import { parseDurationToMs } from '../../../common/utils/time.util';
 
 const REFRESH_COOKIE_NAME = 'refreshToken';
-const REFRESH_COOKIE_OPTIONS = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
-    path: '/api/v1/auth',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-};
 
 export interface AuthClientResponse {
     accessToken: string;
@@ -23,7 +18,23 @@ export interface AuthClientResponse {
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+    private readonly cookieOptions: CookieOptions;
+
+    constructor(
+        private readonly authService: AuthService,
+        private readonly configService: ConfigService,
+    ) {
+        const isProd = this.configService.get<string>('environment') === 'production';
+        const refreshTtl = this.configService.get<string>('jwt.refreshTtl') || '7d';
+
+        this.cookieOptions = {
+            httpOnly: true,
+            secure: isProd,
+            sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
+            path: '/api/v1/auth',
+            maxAge: parseDurationToMs(refreshTtl),
+        };
+    }
 
     @Public()
     @Post('register')
@@ -32,7 +43,7 @@ export class AuthController {
         @Res({ passthrough: true }) res: Response,
     ): Promise<AuthClientResponse> {
         const result = await this.authService.register(registerDto);
-        res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, REFRESH_COOKIE_OPTIONS);
+        res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, this.cookieOptions);
         return {
             accessToken: result.accessToken,
             user: result.user,
@@ -47,7 +58,7 @@ export class AuthController {
         @Res({ passthrough: true }) res: Response,
     ): Promise<AuthClientResponse> {
         const result = await this.authService.login(loginDto);
-        res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, REFRESH_COOKIE_OPTIONS);
+        res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, this.cookieOptions);
         return {
             accessToken: result.accessToken,
             user: result.user,
@@ -74,7 +85,7 @@ export class AuthController {
         }
 
         const result = await this.authService.refresh(refreshToken);
-        res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, REFRESH_COOKIE_OPTIONS);
+        res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, this.cookieOptions);
         return {
             accessToken: result.accessToken,
             user: result.user,
@@ -97,7 +108,7 @@ export class AuthController {
         }
 
         res.clearCookie(REFRESH_COOKIE_NAME, {
-            ...REFRESH_COOKIE_OPTIONS,
+            ...this.cookieOptions,
             maxAge: 0,
         });
     }
