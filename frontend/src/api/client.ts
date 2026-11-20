@@ -38,6 +38,29 @@ const processQueue = (error: unknown, token: string | null = null) => {
     failedQueue = [];
 };
 
+// Singleton in-flight refresh promise to deduplicate concurrent refresh requests across the application
+let inFlightRefreshPromise: Promise<AuthResponse> | null = null;
+
+export const requestTokenRefresh = async (): Promise<AuthResponse> => {
+    if (!inFlightRefreshPromise) {
+        inFlightRefreshPromise = axios
+            .post<AuthResponse>(
+                `${API_BASE_URL}/auth/refresh`,
+                {},
+                { withCredentials: true },
+            )
+            .then((res) => {
+                const { accessToken, user } = res.data;
+                useAuthStore.getState().setAuth(user, accessToken);
+                return res.data;
+            })
+            .finally(() => {
+                inFlightRefreshPromise = null;
+            });
+    }
+    return inFlightRefreshPromise;
+};
+
 // Request interceptor injecting the in-memory access token
 apiClient.interceptors.request.use(
     (config) => {
@@ -84,15 +107,7 @@ apiClient.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                // Exchange HTTP-only refresh cookie for a new access token
-                const refreshResponse = await axios.post<AuthResponse>(
-                    `${API_BASE_URL}/auth/refresh`,
-                    {},
-                    { withCredentials: true },
-                );
-
-                const { accessToken, user } = refreshResponse.data;
-                useAuthStore.getState().setAuth(user, accessToken);
+                const { accessToken } = await requestTokenRefresh();
 
                 processQueue(null, accessToken);
 
@@ -103,8 +118,6 @@ apiClient.interceptors.response.use(
                 return apiClient(originalRequest);
             } catch (refreshError: any) {
                 processQueue(refreshError, null);
-                // Only wipe authentication if the backend explicitly rejected the token (401).
-                // Network errors, connection drops, or 502/503 during server restarts must not clear user session.
                 if (refreshError?.response?.status === 401) {
                     useAuthStore.getState().clearAuth();
                 }
