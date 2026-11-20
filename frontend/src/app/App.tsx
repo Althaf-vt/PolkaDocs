@@ -19,17 +19,22 @@ export function App() {
   const { setAuth, clearAuth } = useAuthStore();
 
   useEffect(() => {
+    let isCancelled = false;
+
     // Attempt silent refresh on boot using HTTP-only cookie
     const initializeAuth = async () => {
       const maxRetries = 3;
       let attempt = 0;
 
-      while (attempt < maxRetries) {
+      while (attempt < maxRetries && !isCancelled) {
         try {
           const response = await authApi.refresh();
-          setAuth(response.user, response.accessToken);
+          if (!isCancelled) {
+            setAuth(response.user, response.accessToken);
+          }
           return;
         } catch (err: any) {
+          if (isCancelled) return;
           const status = err?.response?.status;
 
           // If the server explicitly rejected the token as invalid or missing, clear auth immediately
@@ -38,12 +43,10 @@ export function App() {
             return;
           }
 
-          // If the server is offline or rebooting (network drop / 502 / 503), retry after 1.5s
           attempt++;
           if (attempt < maxRetries) {
             await new Promise((resolve) => setTimeout(resolve, 1500));
           } else {
-            // If the server remains unreachable after all attempts, clear in-memory state
             clearAuth();
           }
         }
@@ -51,6 +54,10 @@ export function App() {
     };
 
     void initializeAuth();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [setAuth, clearAuth]);
 
   return (
