@@ -26,7 +26,7 @@ export function ChatMessageItem({
                     <ThinkingIndicator
                         assistantAvatar={<PolkaDocsIcon className="h-4.5 w-4.5" />}
                         labels={{
-                            thinking: 'Searching knowledge base & thinking',
+                            thinking: 'Reading documents & thinking',
                             thinkingRegion: 'PolkaDocs AI is generating a response',
                         }}
                     />
