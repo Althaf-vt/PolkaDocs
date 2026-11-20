@@ -19,9 +19,9 @@ export default defineConfig({
         'pwa-maskable-512x512.png',
       ],
       manifest: {
-        name: 'PolkaDocs - Document Intelligence',
+        name: 'PolkaDocs - Making Documents Make Sense',
         short_name: 'PolkaDocs',
-        description: 'AI-powered RAG knowledge base and document query assistant',
+        description: 'Making documents make sense with conversational AI and instant answers',
         theme_color: '#8C221A',
         background_color: '#F3F5F7',
         display: 'standalone',
