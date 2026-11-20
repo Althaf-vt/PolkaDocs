@@ -35,6 +35,10 @@ export function ChatMessageItem({
         );
     }
 
+    const displayContent = isAssistant
+        ? message.content.replace(/\s*\[\s*\d+(?:\s*,\s*\d+)*\s*\]/g, '')
+        : message.content;
+
     return (
         <div className={cn('flex w-full', isAssistant ? 'justify-start' : 'justify-end')}>
             <div
@@ -67,7 +71,7 @@ export function ChatMessageItem({
                     </div>
 
                     <div className="prose prose-slate prose-sm max-w-none text-[#34424F] leading-relaxed text-sm">
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                        <ReactMarkdown>{displayContent}</ReactMarkdown>
                     </div>
 
                     {message.citations && message.citations.length > 0 && (
@@ -83,7 +87,7 @@ export function ChatMessageItem({
                                         className="flex items-center gap-1.5 rounded-md border border-[#8C221A]/20 bg-[#F4EAEB] px-2.5 py-1 text-xs font-medium text-[#8C221A] hover:border-[#8C221A]/40 hover:bg-[#EADCE0] transition cursor-pointer"
                                     >
                                         <FileText className="h-3 w-3 text-[#8C221A]" />
-                                        <span>[{idx + 1}] Source Chunk</span>
+                                        <span>Document Excerpt {idx + 1}</span>
                                     </button>
                                 ))}
                             </div>
