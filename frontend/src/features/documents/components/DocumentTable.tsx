@@ -155,11 +155,11 @@ export function DocumentTable({ documents, onReprocess, onDelete }: DocumentTabl
                 description={
                     pendingAction?.type === 'delete' ? (
                         <span>
-                            Are you sure you want to delete <strong className="text-[#121921] font-semibold">{pendingAction.document.fileName}</strong>? This will permanently remove the document, its parsed chunks, and all vector embeddings from the search index. This action cannot be undone.
+                            Are you sure you want to delete <strong className="text-[#121921] font-semibold">{pendingAction.document.fileName}</strong>? This will permanently remove the document and its content from your workspace. This action cannot be undone.
                         </span>
                     ) : (
                         <span>
-                            Are you sure you want to reprocess <strong className="text-[#121921] font-semibold">{pendingAction?.document.fileName}</strong>? This will clear existing chunks and re-run parsing, extraction, and vector embedding generation.
+                            Are you sure you want to reprocess <strong className="text-[#121921] font-semibold">{pendingAction?.document.fileName}</strong>? This will re-analyze the document content for fresh answers and summaries.
                         </span>
                     )
                 }
