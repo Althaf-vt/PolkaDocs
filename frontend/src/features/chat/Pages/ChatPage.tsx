@@ -147,7 +147,7 @@ export function ChatPage() {
                                     <img src={polkadocsLogo} alt="PolkaDocs Logo" className="h-10 w-auto opacity-75 mb-4" />
                                     <p className="text-sm font-bold text-[#121921]">No messages in this conversation</p>
                                     <p className="text-xs text-[#67788A] mt-1 max-w-sm">
-                                        Ask a question below to retrieve verified knowledge from your indexed documents.
+                                        Ask a question below to get clear answers and cited insights from your documents.
                                     </p>
                                 </div>
                             ) : (
@@ -193,7 +193,7 @@ export function ChatPage() {
                     <div className="flex h-full flex-col items-center justify-center text-center text-[#67788A]">
                         <MessageSquare className="h-12 w-12 text-[#BAC3CE] mb-3" />
                         <p className="text-sm font-bold text-[#121921]">Select or start a new conversation</p>
-                        <p className="text-xs text-[#67788A] mt-1">Begin asking questions to explore your knowledge base.</p>
+                        <p className="text-xs text-[#67788A] mt-1">Ask questions to discover insights from your documents.</p>
                         <button
                             onClick={() => createConversationMutation.mutate('New Chat')}
                             className="mt-4 rounded-lg bg-[#8C221A] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#731A13] transition cursor-pointer"
