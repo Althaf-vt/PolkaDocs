@@ -101,9 +101,13 @@ apiClient.interceptors.response.use(
                 }
 
                 return apiClient(originalRequest);
-            } catch (refreshError) {
+            } catch (refreshError: any) {
                 processQueue(refreshError, null);
-                useAuthStore.getState().clearAuth();
+                // Only wipe authentication if the backend explicitly rejected the token (401).
+                // Network errors, connection drops, or 502/503 during server restarts must not clear user session.
+                if (refreshError?.response?.status === 401) {
+                    useAuthStore.getState().clearAuth();
+                }
                 return Promise.reject(refreshError);
             } finally {
                 isRefreshing = false;
