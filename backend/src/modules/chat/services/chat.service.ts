@@ -155,12 +155,18 @@ export class ChatService {
             };
         }
 
-        // Build citations reference metadata
-        const citations: Citation[] = chunks.map((chunk) => ({
-            documentId: chunk.documentId,
-            chunkId: chunk.id,
-            snippet: chunk.content.slice(0, 200),
-        }));
+        const isNotFoundResponse =
+            /could not find (the )?relevant information/i.test(fullGeneratedContent) ||
+            /no relevant information (was |could be )?found/i.test(fullGeneratedContent) ||
+            /not found in the (uploaded )?documents/i.test(fullGeneratedContent);
+
+        const citations: Citation[] = isNotFoundResponse
+            ? []
+            : chunks.map((chunk) => ({
+                documentId: chunk.documentId,
+                chunkId: chunk.id,
+                snippet: chunk.content.slice(0, 200),
+            }));
 
         // Persist completed assistant message with citations
         const assistantMessage = this.messageRepository.create({
