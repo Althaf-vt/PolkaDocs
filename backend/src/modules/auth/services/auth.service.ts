@@ -12,6 +12,9 @@ import { parseDurationToMs } from '../../../common/utils/time.util';
 import { PasswordService } from './password.service';
 import { AuthTokens } from '../interfaces/auth-tokens.interface';
 
+// Allow a 15-second grace window for rotated tokens to tolerate in-flight race conditions
+const ROTATION_GRACE_WINDOW_MS = 15000;
+
 @Injectable()
 export class AuthService {
     constructor(
@@ -105,7 +108,37 @@ export class AuthService {
             }
         }
 
-        if (!matchedTokenRecord || matchedTokenRecord.expiresAt < new Date()) {
+        if (!matchedTokenRecord) {
+            // Check if the presented token was rotated within the allowed grace period (15s)
+            // to tolerate legitimate in-flight concurrent requests during page load or network retries
+            const graceThreshold = new Date(Date.now() - ROTATION_GRACE_WINDOW_MS);
+            const recentlyRevokedTokens = await this.refreshTokenRepository.find({
+                where: {
+                    userId: payload.sub,
+                    revokedAt: MoreThan(graceThreshold),
+                    expiresAt: MoreThan(new Date()),
+                },
+                order: {
+                    revokedAt: 'DESC',
+                },
+            });
+
+            for (const record of recentlyRevokedTokens) {
+                const isMatch = await this.passwordService.compare(refreshTokenRaw, record.tokenHash);
+                if (isMatch) {
+                    const user = await this.usersService.findById(payload.sub);
+                    return this.generateTokenPair(user.id, user.email, user.name, user.createdAt, user.updatedAt);
+                }
+            }
+
+            throw new AppException(
+                'AUTH_TOKEN_INVALID',
+                'Refresh token has been revoked or expired',
+                HttpStatus.UNAUTHORIZED,
+            );
+        }
+
+        if (matchedTokenRecord.expiresAt < new Date()) {
             throw new AppException(
                 'AUTH_TOKEN_INVALID',
                 'Refresh token has been revoked or expired',
