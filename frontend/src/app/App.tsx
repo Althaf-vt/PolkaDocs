@@ -19,17 +19,45 @@ export function App() {
   const { setAuth, clearAuth } = useAuthStore();
 
   useEffect(() => {
+    let isCancelled = false;
+
     // Attempt silent refresh on boot using HTTP-only cookie
     const initializeAuth = async () => {
-      try {
-        const response = await authApi.refresh();
-        setAuth(response.user, response.accessToken);
-      } catch {
-        clearAuth();
+      const maxRetries = 3;
+      let attempt = 0;
+
+      while (attempt < maxRetries && !isCancelled) {
+        try {
+          const response = await authApi.refresh();
+          if (!isCancelled) {
+            setAuth(response.user, response.accessToken);
+          }
+          return;
+        } catch (err: any) {
+          if (isCancelled) return;
+          const status = err?.response?.status;
+
+          // If the server explicitly rejected the token as invalid or missing, clear auth immediately
+          if (status === 401) {
+            clearAuth();
+            return;
+          }
+
+          attempt++;
+          if (attempt < maxRetries) {
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+          } else {
+            clearAuth();
+          }
+        }
       }
     };
 
     void initializeAuth();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [setAuth, clearAuth]);
 
   return (

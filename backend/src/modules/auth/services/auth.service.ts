@@ -1,6 +1,6 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, MoreThan, LessThanOrEqual } from 'typeorm';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../../users/services/users.service';
@@ -11,6 +11,9 @@ import { AppException } from '../../../common/errors/app.exception';
 import { parseDurationToMs } from '../../../common/utils/time.util';
 import { PasswordService } from './password.service';
 import { AuthTokens } from '../interfaces/auth-tokens.interface';
+
+// Allow a 15-second grace window for rotated tokens to tolerate in-flight race conditions
+const ROTATION_GRACE_WINDOW_MS = 15000;
 
 @Injectable()
 export class AuthService {
@@ -84,11 +87,15 @@ export class AuthService {
             );
         }
 
-        // Retrieve active non-revoked tokens for the user
+        // Retrieve active, unexpired tokens for the user sorted newest first
         const activeTokens = await this.refreshTokenRepository.find({
             where: {
                 userId: payload.sub,
                 revokedAt: IsNull(),
+                expiresAt: MoreThan(new Date()),
+            },
+            order: {
+                createdAt: 'DESC',
             },
         });
 
@@ -101,7 +108,37 @@ export class AuthService {
             }
         }
 
-        if (!matchedTokenRecord || matchedTokenRecord.expiresAt < new Date()) {
+        if (!matchedTokenRecord) {
+            // Check if the presented token was rotated within the allowed grace period (15s)
+            // to tolerate legitimate in-flight concurrent requests during page load or network retries
+            const graceThreshold = new Date(Date.now() - ROTATION_GRACE_WINDOW_MS);
+            const recentlyRevokedTokens = await this.refreshTokenRepository.find({
+                where: {
+                    userId: payload.sub,
+                    revokedAt: MoreThan(graceThreshold),
+                    expiresAt: MoreThan(new Date()),
+                },
+                order: {
+                    revokedAt: 'DESC',
+                },
+            });
+
+            for (const record of recentlyRevokedTokens) {
+                const isMatch = await this.passwordService.compare(refreshTokenRaw, record.tokenHash);
+                if (isMatch) {
+                    const user = await this.usersService.findById(payload.sub);
+                    return this.generateTokenPair(user.id, user.email, user.name, user.createdAt, user.updatedAt);
+                }
+            }
+
+            throw new AppException(
+                'AUTH_TOKEN_INVALID',
+                'Refresh token has been revoked or expired',
+                HttpStatus.UNAUTHORIZED,
+            );
+        }
+
+        if (matchedTokenRecord.expiresAt < new Date()) {
             throw new AppException(
                 'AUTH_TOKEN_INVALID',
                 'Refresh token has been revoked or expired',
@@ -130,6 +167,10 @@ export class AuthService {
                 where: {
                     userId: payload.sub,
                     revokedAt: IsNull(),
+                    expiresAt: MoreThan(new Date()),
+                },
+                order: {
+                    createdAt: 'DESC',
                 },
             });
 
@@ -177,6 +218,18 @@ export class AuthService {
         const tokenHash = await this.passwordService.hash(refreshToken);
 
         const expiresAt = new Date(Date.now() + parseDurationToMs(refreshTtl));
+
+        // Revoke expired tokens for the user to maintain a compact search space
+        await this.refreshTokenRepository.update(
+            {
+                userId,
+                revokedAt: IsNull(),
+                expiresAt: LessThanOrEqual(new Date()),
+            },
+            {
+                revokedAt: new Date(),
+            },
+        );
 
         const tokenRecord = this.refreshTokenRepository.create({
             userId,
