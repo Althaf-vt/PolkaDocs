@@ -47,7 +47,7 @@ export function CitationDrawer({
 
                     <div>
                         <span className="text-xs font-bold uppercase tracking-wider text-[#67788A]">
-                            Chunk ID
+                            Reference ID
                         </span>
                         <div className="mt-1 flex items-center gap-2 rounded-lg border border-[#E5E9EE] bg-[#F8FAFC] p-3 text-xs text-[#67788A] font-mono">
                             <Bookmark className="h-4 w-4 shrink-0 text-[#67788A]" />
@@ -57,7 +57,7 @@ export function CitationDrawer({
 
                     <div>
                         <span className="text-xs font-bold uppercase tracking-wider text-[#67788A]">
-                            Retrieved Context Snippet
+                            Document Excerpt
                         </span>
                         <div className="mt-2 rounded-lg border-l-4 border-l-[#8C221A] border-y border-r border-[#E5E9EE] bg-[#F8FAFC] p-4 text-xs leading-relaxed text-[#121921] whitespace-pre-wrap font-sans">
                             {citation.snippet}
