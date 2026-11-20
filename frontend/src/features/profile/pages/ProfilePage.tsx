@@ -223,7 +223,6 @@ export function ProfilePage() {
                     <div className="rounded-2xl border border-[#D5DBE2] bg-white p-6 shadow-md">
                         <div className="border-b border-[#E5E9EE] pb-3 mb-4">
                             <h3 className="text-sm font-bold text-[#121921]">Account Details</h3>
-                            <p className="text-xs text-[#67788A] mt-0.5">Metadata and security status.</p>
                         </div>
 
                         <div className="space-y-4">
