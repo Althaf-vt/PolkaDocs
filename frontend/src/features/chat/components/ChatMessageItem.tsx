@@ -39,6 +39,14 @@ export function ChatMessageItem({
         ? message.content.replace(/\s*\[\s*\d+(?:\s*,\s*\d+)*\s*\]/g, '')
         : message.content;
 
+    const isNotFoundResponse =
+        /could not find (the )?relevant information/i.test(message.content) ||
+        /no relevant information (was |could be )?found/i.test(message.content) ||
+        /not found in the (uploaded )?documents/i.test(message.content);
+
+    const shouldShowCitations =
+        !isNotFoundResponse && message.citations && message.citations.length > 0;
+
     return (
         <div className={cn('flex w-full', isAssistant ? 'justify-start' : 'justify-end')}>
             <div
@@ -74,7 +82,7 @@ export function ChatMessageItem({
                         <ReactMarkdown>{displayContent}</ReactMarkdown>
                     </div>
 
-                    {message.citations && message.citations.length > 0 && (
+                    {shouldShowCitations && (
                         <div className="pt-2">
                             <span className="text-xs font-medium text-[#67788A] block mb-1.5">
                                 Sources & Citations:
