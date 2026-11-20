@@ -1,6 +1,6 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, MoreThan, LessThanOrEqual } from 'typeorm';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../../users/services/users.service';
@@ -84,11 +84,15 @@ export class AuthService {
             );
         }
 
-        // Retrieve active non-revoked tokens for the user
+        // Retrieve active, unexpired tokens for the user sorted newest first
         const activeTokens = await this.refreshTokenRepository.find({
             where: {
                 userId: payload.sub,
                 revokedAt: IsNull(),
+                expiresAt: MoreThan(new Date()),
+            },
+            order: {
+                createdAt: 'DESC',
             },
         });
 
@@ -130,6 +134,10 @@ export class AuthService {
                 where: {
                     userId: payload.sub,
                     revokedAt: IsNull(),
+                    expiresAt: MoreThan(new Date()),
+                },
+                order: {
+                    createdAt: 'DESC',
                 },
             });
 
@@ -177,6 +185,18 @@ export class AuthService {
         const tokenHash = await this.passwordService.hash(refreshToken);
 
         const expiresAt = new Date(Date.now() + parseDurationToMs(refreshTtl));
+
+        // Revoke expired tokens for the user to maintain a compact search space
+        await this.refreshTokenRepository.update(
+            {
+                userId,
+                revokedAt: IsNull(),
+                expiresAt: LessThanOrEqual(new Date()),
+            },
+            {
+                revokedAt: new Date(),
+            },
+        );
 
         const tokenRecord = this.refreshTokenRepository.create({
             userId,
