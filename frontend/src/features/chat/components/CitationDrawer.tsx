@@ -107,7 +107,7 @@ export function CitationDrawer({
                     </button>
                 </div>
 
-                <div className="mt-6 flex-1 space-y-4 overflow-y-auto">
+                <div className="mt-6 flex-1 space-y-4 overflow-y-auto no-scrollbar">
                     <div>
                         <span className="text-xs font-bold uppercase tracking-wider text-[#67788A]">
                             Document Reference
