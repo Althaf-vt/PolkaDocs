@@ -137,7 +137,7 @@ export function ChatPage() {
             <div className="flex flex-1 flex-col overflow-hidden bg-[#F3F5F7]/30">
                 {activeConversationId ? (
                     <>
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6">
                             {isLoadingMessages ? (
                                 <div className="flex h-full items-center justify-center text-xs font-medium text-[#67788A]">
                                     Loading messages...
