@@ -112,13 +112,13 @@ export function ChatInput({
                     </div>
 
                     <p className="text-[11px] text-[#67788A] mb-2 leading-relaxed">
-                        Select specific files to constrain the search context. If none are selected, all indexed documents are queried.
+                        Select specific files to focus your question. If none are selected, questions search across all uploaded documents.
                     </p>
 
                     <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
                         {readyDocuments.length === 0 ? (
                             <p className="text-xs text-[#67788A] py-3 text-center">
-                                No processed documents available. Upload documents first to scope queries.
+                                No ready documents available. Upload documents first to ask targeted questions.
                             </p>
                         ) : (
                             readyDocuments.map((doc) => {

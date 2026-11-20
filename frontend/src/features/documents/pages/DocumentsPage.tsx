@@ -41,7 +41,7 @@ export function DocumentsPage() {
             <div>
                 <h1 className="text-2xl font-extrabold tracking-tight text-[#121921]">Document Management</h1>
                 <p className="mt-1 text-sm text-[#67788A]">
-                    Upload documents to index them into your vector knowledge base.
+                    Upload files to explore insights, summarize content, and chat with your documents.
                 </p>
             </div>
 

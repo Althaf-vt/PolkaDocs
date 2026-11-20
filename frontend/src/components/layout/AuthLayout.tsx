@@ -9,7 +9,7 @@ export function AuthLayout() {
                     <Link to="/" className="flex items-center transition opacity-95 hover:opacity-100">
                         <img src={polkadocsLogo} alt="PolkaDocs Logo" className="h-12 w-auto" />
                     </Link>
-                    <p className="mt-3 text-sm font-medium text-[#67788A]">RAG Document Knowledge Assistant</p>
+                    <p className="mt-3 text-sm font-medium text-[#67788A]">Making Documents Make Sense</p>
                 </div>
                 <div className="rounded-2xl border border-[#D5DBE2] bg-white p-8 shadow-xl">
                     <Outlet />

@@ -26,7 +26,7 @@ export function ChatMessageItem({
                     <ThinkingIndicator
                         assistantAvatar={<PolkaDocsIcon className="h-4.5 w-4.5" />}
                         labels={{
-                            thinking: 'Searching knowledge base & thinking',
+                            thinking: 'Reading documents & thinking',
                             thinkingRegion: 'PolkaDocs AI is generating a response',
                         }}
                     />
@@ -34,6 +34,18 @@ export function ChatMessageItem({
             </div>
         );
     }
+
+    const displayContent = isAssistant
+        ? message.content.replace(/\s*\[\s*\d+(?:\s*,\s*\d+)*\s*\]/g, '')
+        : message.content;
+
+    const isNotFoundResponse =
+        /could not find (the )?relevant information/i.test(message.content) ||
+        /no relevant information (was |could be )?found/i.test(message.content) ||
+        /not found in the (uploaded )?documents/i.test(message.content);
+
+    const shouldShowCitations =
+        !isNotFoundResponse && message.citations && message.citations.length > 0;
 
     return (
         <div className={cn('flex w-full', isAssistant ? 'justify-start' : 'justify-end')}>
@@ -67,10 +79,10 @@ export function ChatMessageItem({
                     </div>
 
                     <div className="prose prose-slate prose-sm max-w-none text-[#34424F] leading-relaxed text-sm">
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                        <ReactMarkdown>{displayContent}</ReactMarkdown>
                     </div>
 
-                    {message.citations && message.citations.length > 0 && (
+                    {shouldShowCitations && (
                         <div className="pt-2">
                             <span className="text-xs font-medium text-[#67788A] block mb-1.5">
                                 Sources & Citations:
@@ -83,7 +95,7 @@ export function ChatMessageItem({
                                         className="flex items-center gap-1.5 rounded-md border border-[#8C221A]/20 bg-[#F4EAEB] px-2.5 py-1 text-xs font-medium text-[#8C221A] hover:border-[#8C221A]/40 hover:bg-[#EADCE0] transition cursor-pointer"
                                     >
                                         <FileText className="h-3 w-3 text-[#8C221A]" />
-                                        <span>[{idx + 1}] Source Chunk</span>
+                                        <span>Document Excerpt {idx + 1}</span>
                                     </button>
                                 ))}
                             </div>
