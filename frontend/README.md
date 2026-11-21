@@ -1,32 +1,49 @@
-# React + TypeScript + Vite
+# 🎨 PolkaDocs Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Client-side Progressive Web Application (PWA) for PolkaDocs, built with React 19, Vite, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+* **Grounded Chat Interface:** Conversational AI chat with markdown rendering, LaTeX equations, and code block formatting.
+* **Source Citation Drawer:** Interactive slide-over drawer displaying exact source document chunks cited in AI responses.
+* **Multi-Format Document Uploader:** Drag-and-drop document upload supporting PDF, DOCX, TXT, and Markdown files with real-time ingestion status tracking.
+* **Progressive Web App (PWA):** Service worker precaching via `vite-plugin-pwa` and Workbox for fast installable mobile and desktop experiences.
+* **Modern UI & Responsive Design:** Built with Tailwind CSS v4, Radix UI primitives, and Lucide icons.
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **Framework:** React 19 + TypeScript
+* **Build Tool:** Vite
+* **Styling:** Tailwind CSS v4
+* **State Management:** Zustand
+* **PWA Engine:** `vite-plugin-pwa` + Workbox
+* **Icons & Components:** Lucide React, Radix UI
 
-## Expanding the Oxlint configuration
+## 💻 Local Development
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+### 1. Install Dependencies
+```bash
+npm install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### 2. Environment Variables
+Create `.env` in the `frontend/` directory (optional for local development, as requests to `/api` proxy to `http://localhost:3000` by default):
+```env
+VITE_API_BASE_URL=http://localhost:3000/api/v1
+```
+
+### 3. Start Development Server
+```bash
+npm run dev
+```
+Open `http://localhost:5173` in your browser. All `/api` requests are automatically proxied to the local backend at `http://localhost:3000`.
+
+### 4. Scripts
+* `npm run dev` — Start Vite development server with Hot Module Replacement (HMR).
+* `npm run build` — Type-check and compile production bundle into `dist/`.
+* `npm run lint` — Run Oxlint validation.
+
+## 🚀 Deployment
+
+The frontend is continuously deployed to **Vercel** with automatic preview branches and production deployments:
+* **Production URL:** [https://polka-docs.vercel.app/](https://polka-docs.vercel.app/)
