@@ -1,4 +1,4 @@
-import { Controller, Get, Res } from '@nestjs/common';
+import { Controller, Get, Headers, Res, UnauthorizedException } from '@nestjs/common';
 import type { Response } from 'express';
 import { Registry, collectDefaultMetrics } from 'prom-client';
 import { Public } from '../../../common/decorators/public.decorator';
@@ -15,7 +15,16 @@ export class MetricsController {
 
     @Public()
     @Get()
-    async getMetrics(@Res() res: Response): Promise<void> {
+    async getMetrics(
+        @Headers('authorization') authHeader: string | undefined,
+        @Res() res: Response,
+    ): Promise<void> {
+        const expectedToken = process.env.METRICS_TOKEN;
+
+        if (!expectedToken || authHeader !== `Bearer ${expectedToken}`) {
+            throw new UnauthorizedException('Invalid metrics token');
+        }
+
         res.setHeader('Content-Type', this.registry.contentType);
         const metrics = await this.registry.metrics();
         res.send(metrics);
