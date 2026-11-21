@@ -2,8 +2,23 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
+# Pushes all scraped metrics up to your Grafana Cloud account
+remote_write:
+  - url: https://prometheus-prod-43-prod-ap-south-1.grafana.net/api/prom/push
+    basic_auth:
+      username: "3790244"
+      password_file: /etc/prometheus/secrets/grafana_token.txt
+
 scrape_configs:
-  - job_name: 'polkadocs-api'
+  # 1. Local backend container (when running via docker-compose)
+  - job_name: 'polkadocs-api-local'
     metrics_path: '/api/v1/metrics'
     static_configs:
       - targets: ['api:3000']
+
+  # 2. Hosted backend on Render (Production)
+  - job_name: 'polkadocs-api-render'
+    scheme: https
+    metrics_path: '/api/v1/metrics'
+    static_configs:
+      - targets: ['polkadocs.onrender.com:443']
