@@ -97,6 +97,11 @@ export class EnvironmentVariables {
     @IsString()
     @IsNotEmpty()
     R2_SECRET_ACCESS_KEY!: string;
+
+    // Observability / Metrics scrape authorization
+    @IsString()
+    @IsOptional()
+    METRICS_TOKEN?: string;
 }
 
 // Boot-time validation function passed to ConfigModule
